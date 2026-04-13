@@ -1,467 +1,115 @@
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
 import {
-  X,
-  LogIn,
-  UserPlus,
-  ShieldCheck,
-  Zap,
-  Mail,
-  User,
-  Lock,
-  Eye,
-  EyeOff,
-  Save,
-  Loader2,
-} from 'lucide-react';
-import { loginWithGoogle, loginWithEmail, registerWithEmail } from '../firebase';
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  User
+} from 'firebase/auth';
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  showNotification: (msg: string, type: 'success' | 'error' | 'info') => void;
-  onLoginSuccess: (user: { name: string; email?: string }) => void;
-  activeTab: TabType;
-  setActiveTab: (tab: TabType) => void;
-}
+// إعدادات مشروعك التي زودتني بها
+const firebaseConfig = {
+  "projectId": "pubgco",
+  "appId": "1:819347633108:web:2a971b3eb6a15da8999c41",
+  "apiKey": "AIzaSyCRhYQ6ScNMO9GixZwW_Z5p_JtsK6CNxQw",
+  "authDomain": "pubgco.firebaseapp.com",
+  "storageBucket": "pubgco.firebasestorage.app",
+  "messagingSenderId": "819347633108"
+};
 
-type TabType = 'login' | 'register';
+// تهيئة Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
 
-const STORAGE_KEY = 'pubg_pro_auth_data';
+const AuthComponent: React.FC = () => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-const AuthModal = React.memo(({
-  isOpen,
-  onClose,
-  showNotification,
-  onLoginSuccess,
-  activeTab,
-  setActiveTab,
-}: AuthModalProps) => {
-
-  const [loginName, setLoginName] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [rememberLogin, setRememberLogin] = useState(false);
-  const [showLoginPassword, setShowLoginPassword] = useState(false);
-
-  const [registerName, setRegisterName] = useState('');
-  const [registerEmail, setRegisterEmail] = useState('');
-  const [registerPassword, setRegisterPassword] = useState('');
-  const [rememberRegister, setRememberRegister] = useState(false);
-  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
+  // مراقبة حالة المستخدم
   useEffect(() => {
-    if (!isOpen) return;
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+    });
+    return () => unsubscribe();
+  }, []);
 
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-
-        if (parsed?.name) {
-          setLoginName(parsed.name);
-          setRegisterName(parsed.name);
-        }
-
-        if (parsed?.email) {
-          setRegisterEmail(parsed.email);
-        }
-
-        if (parsed?.password) {
-          setLoginPassword(parsed.password);
-          setRegisterPassword(parsed.password);
-        }
-
-        setRememberLogin(true);
-        setRememberRegister(true);
+      if (isRegistering) {
+        await createUserWithEmailAndPassword(auth, email, password);
+        alert('تم إنشاء الحساب بنجاح!');
+      } else {
+        await signInWithEmailAndPassword(auth, email, password);
       }
-    } catch (error) {
-      console.error('Failed to load saved auth data:', error);
-    }
-  }, [isOpen]);
-
-  const resetFields = () => {
-    setLoginName('');
-    setLoginPassword('');
-    setRememberLogin(false);
-    setShowLoginPassword(false);
-
-    setRegisterName('');
-    setRegisterEmail('');
-    setRegisterPassword('');
-    setRememberRegister(false);
-    setShowRegisterPassword(false);
-  };
-
-  const handleClose = () => {
-    onClose();
-  };
-
-  const saveRememberedData = (data: {
-    name: string;
-    email?: string;
-    password: string;
-  }) => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  };
-
-  const clearRememberedData = () => {
-    localStorage.removeItem(STORAGE_KEY);
-  };
-
-  const handleGoogleLogin = async () => {
-    setIsLoading(true);
-    try {
-      await loginWithGoogle();
-      showNotification('تم تسجيل الدخول بنجاح عبر Google', 'success');
-      onClose();
-    } catch (error) {
-      console.error('Login Error:', error);
-      showNotification('فشل تسجيل الدخول عبر Google', 'error');
+    } catch (err: any) {
+      let message = 'حدث خطأ: تأكد من صحة البيانات وتفعيل الخيار في Firebase';
+      if (err.code === 'auth/user-not-found') message = 'المستخدم غير موجود';
+      if (err.code === 'auth/wrong-password') message = 'كلمة المرور خاطئة';
+      if (err.code === 'auth/email-already-in-use') message = 'البريد مستخدم بالفعل';
+      setError(message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
-  const handleLogin = async () => {
-    if (!loginName.trim() || !loginPassword.trim()) {
-      showNotification('يرجى إدخال البريد الإلكتروني وكلمة المرور', 'error');
-      return;
-    }
-
-    const email = loginName.trim().includes('@') ? loginName.trim() : `${loginName.trim()}@pubgcom.local`;
-
-    setIsLoading(true);
+  const handleGoogle = async () => {
     try {
-      await loginWithEmail(email, loginPassword);
-      
-      if (rememberLogin) {
-        saveRememberedData({
-          name: loginName.trim(),
-          password: loginPassword,
-        });
-      } else {
-        clearRememberedData();
-      }
-
-      showNotification(`مرحباً، تم تسجيل الدخول بنجاح`, 'success');
-      onClose();
-    } catch (error: any) {
-      console.error('Login Error:', error);
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        showNotification('البريد الإلكتروني أو كلمة المرور غير صحيحة', 'error');
-      } else {
-        showNotification('فشل تسجيل الدخول. يرجى المحاولة لاحقاً', 'error');
-      }
-    } finally {
-      setIsLoading(false);
+      await signInWithPopup(auth, googleProvider);
+    } catch (err) {
+      setError('فشل الدخول بواسطة Google');
     }
   };
 
-  const handleRegister = async () => {
-    if (
-      !registerName.trim() ||
-      !registerEmail.trim() ||
-      !registerPassword.trim()
-    ) {
-      showNotification('يرجى تعبئة جميع الحقول', 'error');
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(registerEmail.trim())) {
-      showNotification('يرجى إدخال بريد إلكتروني صحيح', 'error');
-      return;
-    }
-
-    if (registerPassword.length < 6) {
-      showNotification('كلمة المرور يجب أن تكون 6 أحرف أو أكثر', 'error');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await registerWithEmail(registerEmail.trim(), registerPassword);
-      
-      if (rememberRegister) {
-        saveRememberedData({
-          name: registerName.trim(),
-          email: registerEmail.trim(),
-          password: registerPassword,
-        });
-      } else {
-        clearRememberedData();
-      }
-
-      showNotification(`تم إنشاء الحساب باسم ${registerName} بنجاح`, 'success');
-      onClose();
-    } catch (error: any) {
-      console.error('Register Error:', error);
-      if (error.code === 'auth/email-already-in-use') {
-        showNotification('البريد الإلكتروني مستخدم بالفعل', 'error');
-      } else {
-        showNotification('فشل إنشاء الحساب. يرجى المحاولة لاحقاً', 'error');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (currentUser) {
+    return (
+      <div style={{ color: 'white', textAlign: 'center', padding: '20px' }}>
+        <p>مرحباً بك: {currentUser.email}</p>
+        <button onClick={() => auth.signOut()} style={{ color: '#d4af37', background: 'none', border: '1px solid #d4af37', padding: '5px 10px', cursor: 'pointer' }}>تسجيل خروج</button>
+      </div>
+    );
+  }
 
   return (
-    <AnimatePresence
-      onExitComplete={() => {
-        resetFields();
-      }}
-    >
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={handleClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-          />
+    <div style={{ backgroundColor: '#1a1a1a', color: 'white', padding: '30px', borderRadius: '15px', maxWidth: '350px', margin: '20px auto', border: '1px solid #333' }}>
+      <h3 style={{ textAlign: 'center', color: '#d4af37' }}>{isRegistering ? 'إنشاء حساب' : 'تسجيل دخول'}</h3>
+      
+      <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <input type="email" placeholder="البريد الإلكتروني" required value={email} onChange={(e) => setEmail(e.target.value)} 
+          style={{ padding: '12px', borderRadius: '5px', border: '1px solid #444', backgroundColor: '#222', color: 'white' }} />
+        
+        <input type="password" placeholder="كلمة المرور" required value={password} onChange={(e) => setPassword(e.target.value)} 
+          style={{ padding: '12px', borderRadius: '5px', border: '1px solid #444', backgroundColor: '#222', color: 'white' }} />
+        
+        {error && <p style={{ color: 'red', fontSize: '12px' }}>{error}</p>}
+        
+        <button type="submit" disabled={loading} style={{ padding: '12px', backgroundColor: '#d4af37', border: 'none', borderRadius: '5px', fontWeight: 'bold', cursor: 'pointer' }}>
+          {loading ? 'جاري المعالجة...' : (isRegistering ? 'إنشاء حساب' : 'دخول')}
+        </button>
+      </form>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94, y: 24 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 24 }}
-            transition={{ duration: 0.22 }}
-            className="relative w-full max-w-lg bg-bg-card border border-white/10 rounded-3xl overflow-hidden shadow-2xl"
-          >
-            <div className="p-6 md:p-8">
-              <div className="flex justify-between items-center mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-                    <ShieldCheck size={24} />
-                  </div>
-                  <div>
-                    <h2 className="text-xl md:text-2xl font-bold text-white">
-                      الحساب
-                    </h2>
-                    <p className="text-xs text-slate-400 mt-1">
-                      تسجيل دخول أو إنشاء حساب جديد
-                    </p>
-                  </div>
-                </div>
+      <p style={{ textAlign: 'center', fontSize: '13px', marginTop: '10px', cursor: 'pointer', color: '#aaa' }} onClick={() => setIsRegistering(!isRegistering)}>
+        {isRegistering ? 'لديك حساب بالفعل؟ سجل دخول' : 'ليس لديك حساب؟ أنشئ حساباً'}
+      </p>
 
-                <button
-                  onClick={handleClose}
-                  className="p-2 hover:bg-white/5 rounded-full transition-all"
-                  aria-label="إغلاق"
-                >
-                  <X size={20} />
-                </button>
-              </div>
+      <div style={{ textAlign: 'center', margin: '15px 0', borderTop: '1px solid #333', paddingTop: '15px' }}>
+        <button onClick={handleGoogle} style={{ width: '100%', padding: '10px', backgroundColor: 'white', color: 'black', border: 'none', borderRadius: '5px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16" alt="" />
+          الدخول بواسطة Google
+        </button>
+      </div>
+    </div>
+   );
+};
 
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary mx-auto mb-4 shadow-lg shadow-primary/5">
-                  <Zap size={38} />
-                </div>
-                <h3 className="text-lg md:text-xl font-bold mb-2">
-                  مرحباً بك في ببجي برو
-                </h3>
-                <p className="text-slate-400 text-sm leading-relaxed">
-                  يمكنك تسجيل الدخول أو إنشاء حساب من خلال النموذج التالي.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 bg-white/5 rounded-2xl p-1 mb-6">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('login')}
-                  className={`rounded-xl px-4 py-3 text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                    activeTab === 'login'
-                      ? 'bg-primary text-black'
-                      : 'text-slate-300 hover:bg-white/5'
-                  }`}
-                >
-                  <LogIn size={18} />
-                  تسجيل دخول
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveTab('register')}
-                  className={`rounded-xl px-4 py-3 text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-                    activeTab === 'register'
-                      ? 'bg-primary text-black'
-                      : 'text-slate-300 hover:bg-white/5'
-                  }`}
-                >
-                  <UserPlus size={18} />
-                  إنشاء حساب
-                </button>
-              </div>
-
-              {activeTab === 'login' ? (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <User
-                      size={18}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                      type="text"
-                      value={loginName}
-                      onChange={(e) => setLoginName(e.target.value)}
-                      placeholder="الاسم"
-                      className="w-full bg-black/20 border border-white/10 rounded-2xl py-3 pr-12 pl-4 text-white placeholder:text-slate-500 outline-none focus:border-primary/50 transition-all"
-                    />
-                  </div>
-
-                  <div className="relative">
-                    <Lock
-                      size={18}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                      type={showLoginPassword ? 'text' : 'password'}
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      placeholder="كلمة المرور"
-                      className="w-full bg-black/20 border border-white/10 rounded-2xl py-3 pr-12 pl-12 text-white placeholder:text-slate-500 outline-none focus:border-primary/50 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowLoginPassword((prev) => !prev)}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
-                      aria-label="إظهار أو إخفاء كلمة المرور"
-                    >
-                      {showLoginPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-
-                  <label className="flex items-center gap-3 text-sm text-slate-300 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={rememberLogin}
-                      onChange={(e) => setRememberLogin(e.target.checked)}
-                      className="accent-yellow-500 w-4 h-4"
-                    />
-                    <span className="flex items-center gap-2">
-                      <Save size={16} />
-                      حفظ المعلومات للزيارة القادمة
-                    </span>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleLogin}
-                    disabled={isLoading}
-                    className="w-full btn-gold py-3.5 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? <Loader2 className="animate-spin" size={20} /> : <LogIn size={20} />}
-                    <span className="font-bold">دخول</span>
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="relative">
-                    <User
-                      size={18}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                      type="text"
-                      value={registerName}
-                      onChange={(e) => setRegisterName(e.target.value)}
-                      placeholder="الاسم"
-                      className="w-full bg-black/20 border border-white/10 rounded-2xl py-3 pr-12 pl-4 text-white placeholder:text-slate-500 outline-none focus:border-primary/50 transition-all"
-                    />
-                  </div>
-
-                  <div className="relative">
-                    <Mail
-                      size={18}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                      type="email"
-                      value={registerEmail}
-                      onChange={(e) => setRegisterEmail(e.target.value)}
-                      placeholder="البريد الإلكتروني"
-                      className="w-full bg-black/20 border border-white/10 rounded-2xl py-3 pr-12 pl-4 text-white placeholder:text-slate-500 outline-none focus:border-primary/50 transition-all"
-                    />
-                  </div>
-
-                  <div className="relative">
-                    <Lock
-                      size={18}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                    <input
-                      type={showRegisterPassword ? 'text' : 'password'}
-                      value={registerPassword}
-                      onChange={(e) => setRegisterPassword(e.target.value)}
-                      placeholder="كلمة المرور"
-                      className="w-full bg-black/20 border border-white/10 rounded-2xl py-3 pr-12 pl-12 text-white placeholder:text-slate-500 outline-none focus:border-primary/50 transition-all"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowRegisterPassword((prev) => !prev)}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
-                      aria-label="إظهار أو إخفاء كلمة المرور"
-                    >
-                      {showRegisterPassword ? (
-                        <EyeOff size={18} />
-                      ) : (
-                        <Eye size={18} />
-                      )}
-                    </button>
-                  </div>
-
-                  <label className="flex items-center gap-3 text-sm text-slate-300 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={rememberRegister}
-                      onChange={(e) => setRememberRegister(e.target.checked)}
-                      className="accent-yellow-500 w-4 h-4"
-                    />
-                    <span className="flex items-center gap-2">
-                      <Save size={16} />
-                      حفظ المعلومات للزيارة القادمة
-                    </span>
-                  </label>
-
-                  <button
-                    type="button"
-                    onClick={handleRegister}
-                    disabled={isLoading}
-                    className="w-full btn-gold py-3.5 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoading ? <Loader2 className="animate-spin" size={20} /> : <UserPlus size={20} />}
-                    <span className="font-bold">إنشاء الحساب</span>
-                  </button>
-                </div>
-              )}
-
-              <div className="relative my-6">
-                <div className="border-t border-white/10" />
-                <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 bg-bg-card px-3 text-xs text-slate-500">
-                  أو
-                </span>
-              </div>
-
-              <button
-                onClick={handleGoogleLogin}
-                disabled={isLoading}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 py-3.5 rounded-2xl flex items-center justify-center gap-3 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? <Loader2 className="animate-spin" size={20} /> : <LogIn size={20} />}
-                <span className="font-bold">الدخول بواسطة Google</span>
-              </button>
-
-              <p className="text-[10px] text-slate-500 mt-6 text-center uppercase tracking-widest">
-                UI Login + Google Firebase Access
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-});
-
-export default AuthModal;
+export default AuthComponent;
