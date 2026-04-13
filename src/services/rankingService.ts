@@ -1,22 +1,32 @@
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
 import { Ranking } from "../types";
-
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || (typeof process !== 'undefined' ? process.env.GEMINI_API_KEY : '');
-const ai = new GoogleGenAI({ apiKey: apiKey || "" });
+import { getGenAI } from "../lib/gemini";
 
 export async function fetchLatestRankings(): Promise<Partial<Ranking>[]> {
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `أعطني قائمة بأفضل 5 لاعبين ببجي موبايل (PUBG Mobile) في العالم حالياً بناءً على آخر الإحصائيات والبطولات الرسمية.
-      
-      يجب أن تتضمن المعلومات:
-      1. اسم اللاعب.
-      2. الدولة.
-      3. إحصائية مميزة (مثل عدد الكيلات أو اللقب الحالي).
-      
-      أرجع النتيجة بتنسيق JSON كقائمة من الكائنات.`,
-      config: {
+    const ai = getGenAI();
+    if (!ai) {
+      return getFallbackRankings();
+    }
+    const model = (ai as any).getGenerativeModel({
+      model: "gemini-1.5-flash",
+    });
+    
+    const result = await model.generateContent({
+      contents: [{
+        role: "user",
+        parts: [{
+          text: `أعطني قائمة بأفضل 5 لاعبين ببجي موبايل (PUBG Mobile) في العالم حالياً بناءً على آخر الإحصائيات والبطولات الرسمية.
+          
+          يجب أن تتضمن المعلومات:
+          1. اسم اللاعب.
+          2. الدولة.
+          3. إحصائية مميزة (مثل عدد الكيلات أو اللقب الحالي).
+          
+          أرجع النتيجة بتنسيق JSON كقائمة من الكائنات.`
+        }]
+      }],
+      generationConfig: {
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -30,12 +40,11 @@ export async function fetchLatestRankings(): Promise<Partial<Ranking>[]> {
             },
             required: ['playerName', 'country', 'stats', 'rank']
           }
-        },
-        tools: [{ googleSearch: {} }]
+        }
       }
     });
 
-    const text = response.text;
+    const text = result.response.text();
     if (text) {
       try {
         return JSON.parse(text);
@@ -44,10 +53,16 @@ export async function fetchLatestRankings(): Promise<Partial<Ranking>[]> {
       }
     }
   } catch (error) {
+    if (error instanceof Error && error.message.includes("API Key must be set")) {
+      return getFallbackRankings();
+    }
     console.error("Error fetching rankings:", error);
   }
   
-  // Fallback rankings
+  return getFallbackRankings();
+}
+
+function getFallbackRankings(): Partial<Ranking>[] {
   return [
     { rank: 1, playerName: 'Order', country: 'China', stats: 'MVP PMGC 2024' },
     { rank: 2, playerName: 'Paraboy', country: 'China', stats: 'Top Fragger' },

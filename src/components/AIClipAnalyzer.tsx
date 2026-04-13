@@ -15,7 +15,8 @@ import {
   Trophy,
   Target
 } from 'lucide-react';
-import { GoogleGenAI, Type } from "@google/genai";
+import { Type } from "@google/genai";
+import { getGenAI } from '../lib/gemini';
 
 interface AnalysisResult {
   isGameVideo: boolean;
@@ -67,7 +68,15 @@ export const AIClipAnalyzer: React.FC = () => {
 
     try {
       const base64Data = await fileToBase64(videoFile);
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || (import.meta as any).env.VITE_GEMINI_API_KEY });
+      const ai = getGenAI();
+      if (!ai) {
+        setError('عذراً، خدمة تحليل اللقطات غير متوفرة حالياً لعدم وجود مفتاح API.');
+        setIsAnalyzing(false);
+        return;
+      }
+      const model = (ai as any).getGenerativeModel({
+        model: "gemini-1.5-flash",
+      });
       
       const prompt = `
         Analyze this video clip from the perspective of a professional PUBG Mobile coach.
@@ -92,10 +101,10 @@ export const AIClipAnalyzer: React.FC = () => {
         }
       `;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+      const response = await model.generateContent({
         contents: [
           {
+            role: "user",
             parts: [
               { text: prompt },
               {
@@ -107,7 +116,7 @@ export const AIClipAnalyzer: React.FC = () => {
             ]
           }
         ],
-        config: {
+        generationConfig: {
           responseMimeType: "application/json",
           responseSchema: {
             type: Type.OBJECT,
@@ -123,7 +132,7 @@ export const AIClipAnalyzer: React.FC = () => {
         }
       });
 
-      const data = JSON.parse(response.text || '{}') as AnalysisResult;
+      const data = JSON.parse(response.response.text() || '{}') as AnalysisResult;
       
       if (!data.isGameVideo) {
         setError('عذراً، يبدو أن هذا الفيديو ليس من لعبة PUBG Mobile. يرجى رفع لقطة من اللعبة فقط.');

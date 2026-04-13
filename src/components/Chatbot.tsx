@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, X, Send, Bot, User, Loader2, Sparkles, Minimize2, Maximize2, ImagePlus, Paperclip, Trash2 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { getGenAI } from '../lib/gemini';
 import Markdown from 'react-markdown';
 import { Weapon, Ranking, Event, Giveaway } from '../types';
+import OptimizedImage from './OptimizedImage';
 
 interface ChatbotProps {
   weapons?: Weapon[];
@@ -63,8 +64,15 @@ const Chatbot = React.memo(({ weapons, rankings, events, giveaways }: ChatbotPro
     setIsLoading(true);
 
     try {
-      const apiKey = process.env.GEMINI_API_KEY || "";
-      const ai = new GoogleGenAI({ apiKey });
+      const ai = getGenAI();
+      if (!ai) {
+        setMessages(prev => [...prev, { role: 'bot', content: "عذراً، المساعد الذكي غير متوفر حالياً لعدم وجود مفتاح API. يرجى المحاولة لاحقاً." }]);
+        setIsLoading(false);
+        return;
+      }
+      const model = (ai as any).getGenerativeModel({
+        model: "gemini-1.5-flash",
+      });
       
       const siteContext = `
 بيانات الموقع الحالية التي يمكنك الرجوع إليها:
@@ -85,11 +93,12 @@ const Chatbot = React.memo(({ weapons, rankings, events, giveaways }: ChatbotPro
         });
       }
 
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: { parts },
-        config: {
-          systemInstruction: `أنت خبير في لعبة ببجي موبايل (PUBG Mobile) ومساعد ذكي لموقع "ببجي برو". 
+      const response = await model.generateContent({
+        contents: [{ role: "user", parts }],
+        generationConfig: {
+          maxOutputTokens: 1000,
+        },
+        systemInstruction: `أنت خبير في لعبة ببجي موبايل (PUBG Mobile) ومساعد ذكي لموقع "ببجي برو". 
 مهمتك هي مساعدة اللاعبين في تحسين استراتيجياتهم، اختيار الأسلحة، فهم الخرائط، وتطوير مهاراتهم. 
 لديك وصول لبيانات الموقع الحالية واستخدمها للإجابة على أسئلة المستخدمين بدقة.
 
@@ -98,10 +107,9 @@ ${siteContext}
 أجب باللغة العربية وبأسلوب احترافي ومشجع. ركز على النصائح العملية والتكتيكات المتقدمة. 
 إذا أرسل المستخدم صورة، قم بتحليلها (سواء كانت لقطة شاشة للعبة، إحصائيات، أو خريطة) وقدم نصائح بناءً عليها.
 إذا سألك المستخدم عن سلاح أو تصنيف أو فعالية، استخدم البيانات المزودة أعلاه.`,
-        },
       });
 
-      const botResponse = response.text || "عذراً، لم أتمكن من معالجة طلبك حالياً.";
+      const botResponse = response.response.text() || "عذراً، لم أتمكن من معالجة طلبك حالياً.";
       setMessages(prev => [...prev, { role: 'bot', content: botResponse }]);
     } catch (error) {
       console.error("Gemini API Error:", error);
@@ -181,7 +189,12 @@ ${siteContext}
                         }`}>
                           {msg.image && (
                             <div className="mb-2 rounded-lg overflow-hidden border border-white/10">
-                              <img src={msg.image} alt="User upload" loading="lazy" className="w-full h-auto max-h-48 object-cover" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+                              <OptimizedImage 
+                                src={msg.image} 
+                                alt="User upload" 
+                                className="w-full h-auto max-h-48" 
+                                objectFit="cover"
+                              />
                             </div>
                           )}
                           <div className="markdown-body">
@@ -230,7 +243,12 @@ ${siteContext}
                 <div className="p-4 border-t border-white/10 bg-black/20">
                   {selectedImage && (
                     <div className="mb-3 relative inline-block">
-                      <img src={selectedImage} alt="Preview" loading="lazy" className="w-20 h-20 object-cover rounded-xl border border-primary/30" referrerPolicy="no-referrer" crossOrigin="anonymous" />
+                      <OptimizedImage 
+                        src={selectedImage} 
+                        alt="Preview" 
+                        className="w-20 h-20 rounded-xl border border-primary/30" 
+                        objectFit="cover"
+                      />
                       <button 
                         onClick={() => setSelectedImage(null)}
                         className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg hover:bg-red-600 transition-colors"

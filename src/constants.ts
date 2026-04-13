@@ -15,7 +15,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 32,
     speed: 78,
     range: 56,
-    image: "",
+    image: "pubg-m416",
     bestAttachments: {
       muzzle: "compensator",
       grip: "vertical-grip",
@@ -33,7 +33,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 62,
     speed: 61,
     range: 60,
-    image: "",
+    image: "pubg-akm",
     bestAttachments: {
       muzzle: "compensator",
       magazine: "ext-quickdraw",
@@ -49,7 +49,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 35,
     speed: 71,
     range: 55,
-    image: "",
+    image: "pubg-scar-l",
     bestAttachments: {
       muzzle: "compensator",
       grip: "angled-grip",
@@ -66,7 +66,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 40,
     speed: 65,
     range: 62,
-    image: "",
+    image: "pubg-m16a4",
   },
   {
     id: "aug",
@@ -77,7 +77,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 30,
     speed: 80,
     range: 58,
-    image: "",
+    image: "pubg-aug",
     bestAttachments: {
       muzzle: "compensator",
       grip: "vertical-grip",
@@ -94,7 +94,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 55,
     speed: 85,
     range: 55,
-    image: "",
+    image: "pubg-groza",
     bestAttachments: {
       muzzle: "suppressor",
       magazine: "ext-quickdraw",
@@ -110,7 +110,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 68,
     speed: 75,
     range: 58,
-    image: "",
+    image: "pubg-beryl",
     bestAttachments: {
       muzzle: "compensator",
       grip: "vertical-grip",
@@ -184,7 +184,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 85,
     speed: 10,
     range: 100,
-    image: "",
+    image: "pubg-awm",
     bestAttachments: {
       muzzle: "suppressor",
       magazine: "ext-quickdraw",
@@ -200,7 +200,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 75,
     speed: 15,
     range: 92,
-    image: "",
+    image: "pubg-m24",
     bestAttachments: {
       muzzle: "suppressor",
       magazine: "ext-quickdraw",
@@ -216,7 +216,7 @@ export const WEAPONS: Weapon[] = [
     recoil: 70,
     speed: 12,
     range: 88,
-    image: "",
+    image: "pubg-kar98k",
     bestAttachments: {
       scope: "scope-8x",
     },
@@ -606,7 +606,7 @@ export const ATTACHMENTS: Attachment[] = [
     effect: "تقليل الارتداد الأفقي والرأسي",
     description:
       "أفضل قطعة لتقليل الارتداد بشكل كبير، خاصة عند إطلاق النار بشكل مستمر (Spray).",
-    image: "",
+    image: "pubg-compensator",
   },
   {
     id: "suppressor",
@@ -616,7 +616,7 @@ export const ATTACHMENTS: Attachment[] = [
     effect: "إخفاء وميض السلاح وتقليل الصوت",
     description:
       "يقلل من ضوضاء السلاح ويخفي الوميض، مما يجعل من الصعب على الأعداء تحديد موقعك.",
-    image: "",
+    image: "pubg-suppressor",
   },
   {
     id: "vertical-grip",
@@ -626,7 +626,7 @@ export const ATTACHMENTS: Attachment[] = [
     effect: "تقليل الارتداد الرأسي بنسبة 15%",
     description:
       "مثالي للأسلحة ذات الارتداد الرأسي العالي مثل M416 و Beryl M762.",
-    image: "",
+    image: "pubg-grip",
   },
   {
     id: "angled-grip",
@@ -646,7 +646,7 @@ export const ATTACHMENTS: Attachment[] = [
     effect: "زيادة سعة الذخيرة وتقليل وقت إعادة التلقيم",
     description:
       "القطعة الأهم في المواجهات المباشرة، تمنحك طلقات أكثر ووقت تلقيم أقل.",
-    image: "",
+    image: "pubg-magazine",
   },
   {
     id: "tactical-stock",
@@ -676,7 +676,7 @@ export const ATTACHMENTS: Attachment[] = [
     effect: "تكبير قابل للتعديل من 3x إلى 6x",
     description:
       "المفضل للاعبي الـ M416، يمكن تقليله لـ 3x لثبات خارق في الرش من مسافات بعيدة.",
-    image: "",
+    image: "pubg-scope",
   },
   {
     id: "red-dot",

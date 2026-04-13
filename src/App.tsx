@@ -69,6 +69,7 @@ import {
   TrendingUp,
   Package,
   Radio,
+  Globe,
 } from "lucide-react";
 import {
   db,
@@ -97,7 +98,7 @@ import {
 } from "./firebase";
 import { fetchPubgNews, analyzeClipWithAI } from "./services/geminiService";
 import { fetchLatestRankings } from "./services/rankingService";
-import { GoogleGenAI } from "@google/genai";
+import { getGenAI } from "./lib/gemini";
 import Markdown from "react-markdown";
 import {
   Radar,
@@ -112,6 +113,7 @@ import {
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import Chatbot from "./components/Chatbot";
 import AuthModal from "./components/AuthModal";
+import OptimizedImage from "./components/OptimizedImage";
 import {
   Weapon,
   Device,
@@ -190,58 +192,28 @@ class ErrorBoundary extends Component<
   }
 }
 
-// Reusable Image Component with Fallback
+// Reusable Image Component with Optimization
 const GameImage = ({
   src,
   alt,
   className,
+  aspectRatio,
+  objectFit = "contain",
 }: {
   src: string;
   alt: string;
   className?: string;
+  aspectRatio?: string;
+  objectFit?: "cover" | "contain";
 }) => {
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  // Reset error state when src changes
-  useEffect(() => {
-    setError(false);
-    setLoading(true);
-  }, [src]);
-
-  const imageSrc =
-    !src || error
-      ? `https://picsum.photos/seed/${encodeURIComponent(alt)}/400/200`
-      : src;
-
   return (
-    <div
-      className={`relative flex items-center justify-center overflow-hidden ${className}`}
-    >
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white/5 animate-pulse">
-          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
-      <img
-        key={imageSrc}
-        src={imageSrc}
-        alt={alt}
-        className={`w-full h-full object-contain transition-opacity duration-300 ${
-          loading ? "opacity-0" : "opacity-100"
-        }`}
-        onLoad={() => setLoading(false)}
-        onError={() => {
-          if (!error) {
-            setError(true);
-          } else {
-            setLoading(false);
-          }
-        }}
-        referrerPolicy="no-referrer"
-        crossOrigin="anonymous"
-      />
-    </div>
+    <OptimizedImage
+      src={src}
+      alt={alt}
+      className={className}
+      aspectRatio={aspectRatio}
+      objectFit={objectFit}
+    />
   );
 };
 type ComparisonAdvice = {
@@ -580,6 +552,155 @@ const CountdownTimer = ({
           </span>
         </div>
       ))}
+    </div>
+  );
+};
+
+const TournamentFlashBanner = ({ settings }: { settings: CompetitionSettings[] }) => {
+  const activeTournaments = settings.filter(s => s.type === 'tournament' && s.isActive);
+  
+  if (activeTournaments.length === 0) return null;
+
+  return (
+    <div className="space-y-6">
+      {activeTournaments.map((tournament) => (
+        <motion.div
+          key={tournament.id}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 border border-primary/30 p-1 group"
+        >
+          {/* Animated Flash Background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+          
+          <div className="relative bg-bg-dark/80 backdrop-blur-xl rounded-[22px] p-6 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-6">
+              <div className="relative">
+                <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-primary flex items-center justify-center text-black shadow-[0_0_30px_rgba(242,169,0,0.4)] animate-pulse">
+                  <Trophy size={32} />
+                </div>
+                <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-bounce">
+                  <Radio size={12} className="text-white" />
+                </div>
+              </div>
+              
+              <div className="text-right md:text-right">
+                <h3 className="text-2xl md:text-4xl font-black gold-shimmer mb-2">
+                  {tournament.id === 'daily-tournament' ? 'البطولة اليومية الكبرى' : 'بطولة ببجيكوم الخاصة'}
+                </h3>
+                <div className="flex items-center gap-3 text-slate-400 font-bold">
+                  <span className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
+                  <span>البطولة نشطة الآن - سارع بالتسجيل</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-4">
+              <span className="text-xs font-black text-primary uppercase tracking-[0.3em]">ينتهي التسجيل خلال</span>
+              <CountdownTimer endDate={tournament.endDate} />
+              <button className="mt-2 btn-gold px-8 py-3 rounded-xl font-black text-lg shadow-xl shadow-primary/20 hover:scale-105 transition-transform">
+                سجل الآن مجاناً
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+};
+
+const OfficialGlobalTournaments = () => {
+  const tournaments = [
+    { id: 'pmgc', name: 'PMGC 2026', date: '2026-11-15T00:00:00Z', icon: <Trophy size={24} />, label: 'البطولة العالمية' },
+    { id: 'pmwi', name: 'PMWI Riyadh', date: '2026-07-20T00:00:00Z', icon: <Globe size={24} />, label: 'الدعوة العالمية' },
+    { id: 'pmsl', name: 'PMSL EMEA', date: '2026-05-25T00:00:00Z', icon: <Zap size={24} />, label: 'الدوري الإقليمي' },
+  ];
+
+  return (
+    <section className="space-y-8">
+      <div className="flex items-center justify-between px-4 md:px-0">
+        <div className="flex items-center gap-4">
+          <div className="w-2 h-8 bg-primary rounded-full shadow-[0_0_20px_rgba(242,169,0,0.6)]" />
+          <h2 className="text-xl md:text-2xl font-black tracking-tight">البطولات الرسمية العالمية</h2>
+        </div>
+        <div className="px-4 py-1 rounded-full bg-primary/10 border border-primary/20">
+          <span className="text-[10px] text-primary font-black uppercase tracking-widest">Official Global Events</span>
+        </div>
+      </div>
+
+      <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto pb-6 px-4 md:px-0 snap-x no-scrollbar">
+        {tournaments.map((t) => (
+          <motion.div
+            key={t.id}
+            whileHover={{ y: -8, scale: 1.02 }}
+            className="relative min-w-[280px] md:min-w-0 snap-center overflow-hidden rounded-3xl bg-bg-card border border-white/10 p-6 group shadow-xl hover:shadow-primary/5 transition-all duration-500"
+          >
+            {/* Flash Effect */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
+            
+            <div className="flex flex-col items-center text-center gap-6 relative z-10">
+              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner group-hover:bg-primary group-hover:text-black transition-all duration-500 transform group-hover:rotate-6">
+                {t.icon}
+              </div>
+              
+              <div className="space-y-1">
+                <h3 className="font-black text-lg text-white group-hover:text-primary transition-colors">{t.name}</h3>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-[0.2em]">{t.label}</p>
+              </div>
+
+              <div className="w-full space-y-3 pt-4 border-t border-white/5">
+                <div className="text-[10px] text-primary font-black uppercase tracking-widest">يبدأ العد التنازلي</div>
+                <div className="text-lg font-mono text-white bg-white/5 py-3 rounded-xl border border-white/10 shadow-inner">
+                  <CountdownTimer endDate={t.date} />
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const BottomNav = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: any) => void }) => {
+  const navItems = [
+    { id: 'home', label: 'الرئيسية', icon: <Home size={20} /> },
+    { id: 'sensitivity', label: 'الحساسية', icon: <Target size={20} /> },
+    { id: 'news', label: 'الأخبار', icon: <Newspaper size={20} /> },
+    { id: 'tools', label: 'الأدوات', icon: <Wrench size={20} /> },
+  ];
+
+  return (
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-bg-dark/80 backdrop-blur-xl border-t border-white/10 px-4 py-2 pb-safe">
+      <div className="flex justify-around items-center">
+        {navItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => {
+              if (item.id === 'tools') {
+                // If tools, maybe we can toggle a tools menu or just go to calculator
+                setActiveTab('calculator');
+              } else {
+                setActiveTab(item.id as any);
+              }
+            }}
+            className={`flex flex-col items-center gap-1 p-2 transition-all ${
+              (activeTab === item.id || (item.id === 'tools' && ['calculator', 'compare', 'loadouts', 'rate'].includes(activeTab)))
+                ? 'text-primary' 
+                : 'text-slate-400'
+            }`}
+          >
+            <div className={`p-1.5 rounded-xl transition-all ${
+              (activeTab === item.id || (item.id === 'tools' && ['calculator', 'compare', 'loadouts', 'rate'].includes(activeTab)))
+                ? 'bg-primary/10' 
+                : ''
+            }`}>
+              {item.icon}
+            </div>
+            <span className="text-[10px] font-bold">{item.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
@@ -1128,17 +1249,21 @@ function AppContent() {
   const [settingStartDate, setSettingStartDate] = useState("");
   const [settingEndDate, setSettingEndDate] = useState("");
   const [isAllEventsHidden, setIsAllEventsHidden] = useState(false);
+  const [isLogoHidden, setIsLogoHidden] = useState(false);
   const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
   
-  // Update form fields when selected competition changes
   useEffect(() => {
     const setting = competitionSettings.find((s) => s.id === selectedSettingId);
     if (setting) {
       setSettingStartDate(setting.startDate || "");
       setSettingEndDate(setting.endDate || "");
+      setIsAllEventsHidden(setting.isAllEventsHidden || false);
+      setIsLogoHidden(setting.isLogoHidden || false);
     } else {
       setSettingStartDate("");
       setSettingEndDate("");
+      setIsAllEventsHidden(false);
+      setIsLogoHidden(false);
     }
   }, [selectedSettingId, competitionSettings]);
   
@@ -1400,6 +1525,7 @@ function AppContent() {
           endDate: settingEndDate,
           isActive: !immediateStop,
           isAllEventsHidden: isAllEventsHidden,
+          isLogoHidden: isLogoHidden,
         });
         showNotification("تم تحديث إعدادات المسابقة", "success");
       } else {
@@ -1411,6 +1537,7 @@ function AppContent() {
           endDate: settingEndDate,
           isActive: !immediateStop,
           isAllEventsHidden: isAllEventsHidden,
+          isLogoHidden: isLogoHidden,
           updatedAt: serverTimestamp(),
         });
         showNotification("تم إضافة إعدادات مسابقة جديدة", "success");
@@ -1453,31 +1580,43 @@ function AppContent() {
     setIsAiLoading(true);
     setAiSensitivityResponse(null);
     try {
-      const ai = new GoogleGenAI({
-        apiKey: import.meta.env.VITE_GEMINI_API_KEY as string,
+      const ai = getGenAI();
+      if (!ai) {
+        setAiSensitivityResponse("عذراً، خدمة الذكاء الاصطناعي غير متوفرة حالياً لعدم وجود مفتاح API. يرجى التواصل مع الإدارة.");
+        setIsAiLoading(false);
+        return;
+      }
+      const model = (ai as any).getGenerativeModel({
+        model: "gemini-1.5-flash",
       });
       const weaponContext = selectedWeapon
         ? `للسلاح: ${selectedWeapon.nameAr} (${selectedWeapon.nameEn})`
         : "";
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `أعطني أفضل أرقام حساسية (Sensitivity) للعبة ببجي موبايل لجهاز: ${smartDeviceSearch} ${weaponContext}. 
-        يجب أن تشمل النصيحة:
-        1. حساسية الكاميرا (Camera Sensitivity).
-        2. حساسية الـ ADS.
-        3. حساسية الجيروسكوب (Gyroscope) إذا كان مدعوماً.
-        4. نصيحة عامة لهذا الجهاز وهذا السلاح تحديداً.
-        اجعل الإجابة منظمة جداً وباللغة العربية.`,
-        config: {
-          systemInstruction:
-            "أنت خبير تقني في إعدادات لعبة ببجي موبايل. تقدم نصائح دقيقة بناءً على مواصفات الأجهزة وقوة المعالج ومعدل التحديث (FPS) وخصائص الأسلحة.",
-        },
+      const response = await model.generateContent({
+        contents: [{
+          role: "user",
+          parts: [{
+            text: `أعطني أفضل أرقام حساسية (Sensitivity) للعبة ببجي موبايل لجهاز: ${smartDeviceSearch} ${weaponContext}. 
+            يجب أن تشمل النصيحة:
+            1. حساسية الكاميرا (Camera Sensitivity).
+            2. حساسية الـ ADS.
+            3. حساسية الجيروسكوب (Gyroscope) إذا كان مدعوماً.
+            4. نصيحة عامة لهذا الجهاز وهذا السلاح تحديداً.
+            اجعل الإجابة منظمة جداً وباللغة العربية.`
+          }]
+        }],
+        systemInstruction:
+          "أنت خبير تقني في إعدادات لعبة ببجي موبايل. تقدم نصائح دقيقة بناءً على مواصفات الأجهزة وقوة المعالج ومعدل التحديث (FPS) وخصائص الأسلحة.",
       });
       setAiSensitivityResponse(
-        response.text ||
+        response.response.text() ||
           "لم نتمكن من العثور على إعدادات دقيقة لهذا الجهاز حالياً."
       );
     } catch (error) {
+      if (error instanceof Error && error.message.includes("API Key must be set")) {
+        setAiSensitivityResponse("عذراً، خدمة الذكاء الاصطناعي غير متوفرة حالياً لعدم وجود مفتاح API.");
+        return;
+      }
       console.error("AI Sensitivity Error:", error);
       showNotification(
         "حدث خطأ أثناء جلب البيانات من الذكاء الاصطناعي",
@@ -1613,9 +1752,13 @@ function AppContent() {
   const handleUpdateWeaponImage = async () => {
     if (!isAdmin || !isEditingWeapon || !editWeaponImage) return;
     try {
-      await updateDoc(doc(db, "weapons", isEditingWeapon), {
-        image: editWeaponImage,
-      });
+      await setDoc(
+        doc(db, "weapons", isEditingWeapon),
+        {
+          image: editWeaponImage,
+        },
+        { merge: true }
+      );
       showNotification("تم تحديث صورة السلاح", "success");
       setIsEditingWeapon(null);
     } catch (error) {
@@ -1630,9 +1773,13 @@ function AppContent() {
   const handleUpdateCharacterImage = async () => {
     if (!isAdmin || !isEditingCharacter || !editCharacterImage) return;
     try {
-      await updateDoc(doc(db, "characters", isEditingCharacter), {
-        image: editCharacterImage,
-      });
+      await setDoc(
+        doc(db, "characters", isEditingCharacter),
+        {
+          image: editCharacterImage,
+        },
+        { merge: true }
+      );
       showNotification("تم تحديث صورة الشخصية", "success");
       setIsEditingCharacter(null);
     } catch (error) {
@@ -1647,9 +1794,13 @@ function AppContent() {
   const handleUpdateProPlayerImage = async () => {
     if (!isAdmin || !isEditingProPlayer || !editProPlayerImage) return;
     try {
-      await updateDoc(doc(db, "players", isEditingProPlayer), {
-        image: editProPlayerImage,
-      });
+      await setDoc(
+        doc(db, "players", isEditingProPlayer),
+        {
+          image: editProPlayerImage,
+        },
+        { merge: true }
+      );
       showNotification("تم تحديث صورة اللاعب", "success");
       setIsEditingProPlayer(null);
     } catch (error) {
@@ -1852,9 +2003,13 @@ function AppContent() {
   const handleUpdateDevice = async (field: "name" | "code", value: string) => {
     if (!isAdmin) return;
     try {
-      await updateDoc(doc(db, "devices", selectedDevice.id), {
-        [field]: value,
-      });
+      await setDoc(
+        doc(db, "devices", selectedDevice.id),
+        {
+          [field]: value,
+        },
+        { merge: true }
+      );
       showNotification("تم التحديث بنجاح", "success");
     } catch (error) {
       handleFirestoreError(
@@ -2435,9 +2590,13 @@ function AppContent() {
   const handleUpdateAttachment = async (field: string, value: string) => {
     if (!isAdmin || !isEditingAttachment) return;
     try {
-      await updateDoc(doc(db, "attachments", isEditingAttachment), {
-        [field]: value,
-      });
+      await setDoc(
+        doc(db, "attachments", isEditingAttachment),
+        {
+          [field]: value,
+        },
+        { merge: true }
+      );
       showNotification("تم تحديث المرفق", "success");
     } catch (error) {
       handleFirestoreError(
@@ -2456,7 +2615,11 @@ function AppContent() {
   const handleUpdateWeapon = async (field: string, value: any) => {
     if (!isAdmin || !isEditingWeapon) return;
     try {
-      await updateDoc(doc(db, "weapons", isEditingWeapon), { [field]: value });
+      await setDoc(
+        doc(db, "weapons", isEditingWeapon),
+        { [field]: value },
+        { merge: true }
+      );
       showNotification("تم تحديث السلاح", "success");
     } catch (error) {
       handleFirestoreError(
@@ -2790,28 +2953,29 @@ function AppContent() {
       </AnimatePresence>
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-bg-dark/80 backdrop-blur-xl border-b border-white/5 py-4 px-6 transition-all duration-300">
+      <header className="sticky top-0 z-50 backdrop-blur-2xl border-b border-white/10 px-4 md:px-6 py-4 bg-bg-dark/75 transition-all duration-300">
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-4 md:gap-12">
           <div
-            className="flex items-center gap-3 md:gap-5 group cursor-pointer hover:scale-[1.02] transition-transform duration-300"
+            className={`flex items-center gap-3 md:gap-5 group cursor-pointer hover:scale-[1.02] transition-all duration-300 ${
+              competitionSettings.find(s => s.id === 'global')?.isLogoHidden ? 'hidden' : 'flex'
+            }`}
             onClick={() => setActiveTab("home")}
           >
             <div className="relative">
-              <div className="w-10 h-10 md:w-14 md:h-14 bg-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(242,169,0,0.2)] group-hover:shadow-[0_0_30px_rgba(242,169,0,0.4)] transition-all duration-500 overflow-hidden border border-primary/20">
-                <GameImage
-                  src="/logo.png"
-                  alt="ببجيكوم"
-                  className="w-full h-full"
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20 group-hover:border-primary/50 transition-all duration-500 shadow-inner">
+                <Zap
+                  size={24}
+                  className="text-primary group-hover:scale-110 transition-transform"
                 />
               </div>
-              <div className="absolute -inset-2 bg-primary/20 blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute -inset-1 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <div className="flex flex-col justify-center">
-              <h1 className="text-xl md:text-3xl font-black tracking-tighter gold-shimmer leading-none mb-1">
+              <h1 className="text-lg md:text-2xl font-black tracking-tighter gold-shimmer leading-none mb-1">
                 ببجيكوم
               </h1>
-              <p className="text-[7px] md:text-[9px] text-primary/70 font-bold uppercase tracking-[0.3em] leading-none">
-                PUBGCOM
+              <p className="text-[8px] md:text-[10px] text-primary/70 font-bold uppercase tracking-[0.3em] leading-none">
+                PUBGCOM PRO
               </p>
             </div>
           </div>
@@ -2862,7 +3026,7 @@ function AppContent() {
               >
                 <span className="relative z-10">مميزات وخصائص</span>
                 <ChevronDown
-                  size={14}
+                  size={24}
                   className={`transition-transform duration-300 ${
                     isFeaturesDropdownOpen ? "rotate-180" : ""
                   }`}
@@ -2958,7 +3122,7 @@ function AppContent() {
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-primary group-hover:w-1/2 transition-all duration-300" />
                 )}
                 <ChevronDown
-                  size={14}
+                  size={24}
                   className={`transition-transform duration-300 ${
                     isToolsDropdownOpen ? "rotate-180" : ""
                   }`}
@@ -3056,7 +3220,7 @@ function AppContent() {
                   <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1px] bg-primary group-hover:w-1/2 transition-all duration-300" />
                 )}
                 <ChevronDown
-                  size={14}
+                  size={24}
                   className={`transition-transform duration-300 ${
                     isCommunityDropdownOpen ? "rotate-180" : ""
                   }`}
@@ -3205,23 +3369,31 @@ function AppContent() {
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="fixed inset-0 z-[60] bg-bg-dark lg:hidden overflow-y-auto"
             >
-              <div className="p-6 space-y-8">
-                <div className="flex justify-between items-center">
+              <div className="p-6 space-y-8 relative">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none overflow-hidden">
+                  <Zap size={400} className="absolute -top-20 -right-20 rotate-12 text-primary" />
+                </div>
+
+                <div className="flex justify-between items-center relative z-10">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
                       <Zap size={20} className="text-primary" />
                     </div>
-                    <h2 className="text-xl font-black gold-shimmer">القائمة</h2>
+                    <div>
+                      <h2 className="text-xl font-black gold-shimmer leading-none">القائمة</h2>
+                      <p className="text-[8px] text-slate-500 font-bold uppercase tracking-widest mt-1">Navigation Menu</p>
+                    </div>
                   </div>
                   <button
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2 rounded-xl bg-white/5 text-slate-400"
+                    className="p-2.5 rounded-xl bg-white/5 text-slate-400 border border-white/10"
                   >
                     <Plus className="rotate-45" size={24} />
                   </button>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 relative z-10">
                   {[
                     { id: "home", label: "الرئيسية", icon: <Home size={18} /> },
                     {
@@ -3413,7 +3585,7 @@ function AppContent() {
         </AnimatePresence>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12">
+      <main className="max-w-7xl mx-auto px-0 sm:px-6 py-6 sm:py-12 mb-20 lg:mb-0">
         <AnimatePresence mode="wait">
           {activeTab === "home" ? (
             <motion.div
@@ -3421,16 +3593,16 @@ function AppContent() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="space-y-24 py-12"
+              className="space-y-16 md:space-y-24 py-6 md:py-12"
             >
               {/* Hero Section */}
-              <section className="relative overflow-hidden rounded-3xl bg-bg-card border border-white/5 p-8 md:p-20 text-white shadow-xl">
+              <section className="relative overflow-hidden mx-4 sm:mx-0 rounded-3xl bg-bg-card border border-white/5 p-6 md:p-20 text-white shadow-xl">
                 <div className="relative z-10 max-w-2xl">
                   <motion.span
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-xs font-bold uppercase tracking-wider mb-6"
+                    className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4 md:mb-6"
                   >
                     المنصة رقم #1 للاعبي ببجي
                   </motion.span>
@@ -3438,7 +3610,7 @@ function AppContent() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="text-4xl md:text-6xl font-bold leading-tight mb-6"
+                    className="text-3xl md:text-6xl font-bold leading-tight mb-4 md:mb-6"
                   >
                     احترف اللعبة <br />{" "}
                     <span className="gold-shimmer">بأفضل الإعدادات</span>
@@ -3447,7 +3619,7 @@ function AppContent() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.4 }}
-                    className="text-lg md:text-xl text-text-muted mb-10 leading-relaxed"
+                    className="text-sm md:text-xl text-text-muted mb-8 md:mb-10 leading-relaxed"
                   >
                     نقدم لك أدق إعدادات الحساسية المخصصة لجهازك، وآخر أخبار
                     الفعاليات وعروض الشدات الحصرية في مكان واحد.
@@ -3460,7 +3632,7 @@ function AppContent() {
                   >
                     <button
                       onClick={() => setActiveTab("sensitivity")}
-                      className="btn-gold px-10 py-5 rounded-2xl text-xl premium-glow"
+                      className="btn-gold px-8 md:px-10 py-4 md:py-5 rounded-2xl text-lg md:text-xl premium-glow w-full md:w-auto"
                     >
                       ابدأ الآن
                     </button>
@@ -3477,6 +3649,12 @@ function AppContent() {
                   />
                 </div>
               </section>
+
+              {/* Tournament Flash Banner */}
+              <TournamentFlashBanner settings={competitionSettings} />
+
+              {/* Official Global Tournaments */}
+              <OfficialGlobalTournaments />
 
               {/* Star of the Round Section */}
               {clips.some((c) => c.isWinner) && (
@@ -3559,10 +3737,10 @@ function AppContent() {
               {/* Featured Ads Section */}
               {ads.length > 0 && (
                 <section className="space-y-8">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between px-4 md:px-0">
                     <div className="flex items-center gap-3">
                       <div className="w-1.5 h-8 bg-primary rounded-full shadow-[0_0_15px_rgba(242,169,0,0.5)]" />
-                      <h2 className="text-2xl font-black tracking-tight">
+                      <h2 className="text-xl md:text-2xl font-black tracking-tight">
                         عروض وخدمات مميزة
                       </h2>
                     </div>
@@ -3574,7 +3752,7 @@ function AppContent() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto pb-6 px-4 md:px-0 snap-x no-scrollbar">
                     {ads.map((ad, i) => (
                       <motion.a
                         key={ad.id}
@@ -3585,7 +3763,7 @@ function AppContent() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.1 }}
-                        className="group relative overflow-hidden rounded-3xl bg-bg-card border border-white/5 p-8 hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5"
+                        className="min-w-[280px] md:min-w-0 snap-center group relative overflow-hidden rounded-3xl bg-bg-card border border-white/5 p-8 hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5"
                       >
                         <div className="relative z-10">
                           <div className="flex items-start justify-between mb-6">
@@ -3633,41 +3811,47 @@ function AppContent() {
               )}
 
               {/* Features Grid */}
-              <section className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {[
-                  {
-                    title: "حساسية مخصصة",
-                    desc: "إعدادات دقيقة لكل جهاز (iPhone, iPad, Samsung) لضمان أفضل أداء.",
-                    icon: <Smartphone className="text-primary" size={28} />,
-                  },
-                  {
-                    title: "أخبار فورية",
-                    desc: "تغطية شاملة لكل الفعاليات، الأطوار الجديدة، وعروض الشدات الرسمية.",
-                    icon: <Newspaper className="text-primary" size={28} />,
-                  },
-                  {
-                    title: "أكواد المحترفين",
-                    desc: "انسخ أكواد حساسية أفضل اللاعبين العالميين بضغطة واحدة.",
-                    icon: <Crosshair className="text-primary" size={28} />,
-                  },
-                ].map((feature, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: i * 0.1 }}
-                    className="p-8 pro-card hover:translate-y-[-4px]"
-                  >
-                    <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
-                      {feature.icon}
-                    </div>
-                    <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
-                    <p className="text-slate-400 leading-relaxed">
-                      {feature.desc}
-                    </p>
-                  </motion.div>
-                ))}
+              <section className="space-y-8">
+                <div className="flex items-center gap-3 px-4 md:px-0">
+                  <div className="w-1.5 h-8 bg-primary rounded-full shadow-[0_0_15px_rgba(242,169,0,0.5)]" />
+                  <h2 className="text-xl md:text-2xl font-black tracking-tight">لماذا ببجيكوم؟</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-4 md:px-0">
+                  {[
+                    {
+                      title: "حساسية مخصصة",
+                      desc: "إعدادات دقيقة لكل جهاز (iPhone, iPad, Samsung) لضمان أفضل أداء.",
+                      icon: <Smartphone className="text-primary" size={28} />,
+                    },
+                    {
+                      title: "أخبار فورية",
+                      desc: "تغطية شاملة لكل الفعاليات، الأطوار الجديدة، وعروض الشدات الرسمية.",
+                      icon: <Newspaper className="text-primary" size={28} />,
+                    },
+                    {
+                      title: "أكواد المحترفين",
+                      desc: "انسخ أكواد حساسية أفضل اللاعبين العالميين بضغطة واحدة.",
+                      icon: <Crosshair className="text-primary" size={28} />,
+                    },
+                  ].map((feature, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: i * 0.1 }}
+                      className="p-8 pro-card hover:translate-y-[-4px]"
+                    >
+                      <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
+                        {feature.icon}
+                      </div>
+                      <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                      <p className="text-slate-400 leading-relaxed text-sm">
+                        {feature.desc}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
               </section>
 
               {/* Stats Section */}
@@ -3861,9 +4045,9 @@ function AppContent() {
                               </option>
                             ))}
                           </select>
-                          <ChevronRight
+                          <ChevronDown
                             className="absolute left-4 top-1/2 -translate-y-1/2 rotate-90 text-slate-500 pointer-events-none"
-                            size={16}
+                            size={24}
                           />
                         </div>
                       </div>
@@ -3897,9 +4081,9 @@ function AppContent() {
                               </option>
                             ))}
                           </select>
-                          <ChevronRight
+                          <ChevronDown
                             className="absolute left-4 top-1/2 -translate-y-1/2 rotate-90 text-slate-500 pointer-events-none"
-                            size={16}
+                            size={24}
                           />
                         </div>
                       </div>
@@ -4532,7 +4716,7 @@ function AppContent() {
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold flex items-center justify-between hover:border-primary transition-all cursor-pointer"
                   >
                     <ChevronDown
-                      size={20}
+                      size={24}
                       className={`text-slate-500 transition-transform duration-300 ${
                         isFeaturesCategoryDropdownOpen ? "rotate-180" : ""
                       }`}
@@ -4604,7 +4788,7 @@ function AppContent() {
                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold flex items-center justify-between hover:border-primary transition-all cursor-pointer"
                       >
                         <ChevronDown
-                          size={20}
+                          size={24}
                           className={`text-slate-500 transition-transform duration-300 ${
                             isCharacterDropdownOpen ? "rotate-180" : ""
                           }`}
@@ -4725,7 +4909,7 @@ function AppContent() {
                         className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white font-bold flex items-center justify-between hover:border-primary transition-all cursor-pointer"
                       >
                         <ChevronDown
-                          size={20}
+                          size={24}
                           className={`text-slate-500 transition-transform duration-300 ${
                             isAttachmentDropdownOpen ? "rotate-180" : ""
                           }`}
@@ -4964,7 +5148,7 @@ function AppContent() {
                       )}
                     </select>
                     <div className="absolute left-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
-                      <ChevronDown size={20} />
+                      <ChevronDown size={24} />
                     </div>
                   </div>
                 </div>
@@ -7685,6 +7869,7 @@ function AppContent() {
                         <option value="royal-pass">سحب الرويال باس</option>
                         <option value="best-clip">لقطاتكم</option>
                         <option value="daily-tournament">بطولات يومية</option>
+                        <option value="global">الإعدادات العامة (الشعار)</option>
                       </datalist>
                     </div>
 
@@ -7735,6 +7920,32 @@ function AppContent() {
                         />
                       </div>
                     </div>
+
+                    {/* Logo Visibility Toggle (Only for global) */}
+                    {selectedSettingId === 'global' && (
+                      <div className="space-y-4">
+                        <label className="text-sm font-bold text-slate-400 block">
+                          ظهور شعار الموقع (ببجيكوم)
+                        </label>
+                        <div className="flex items-center gap-4 p-4 rounded-xl bg-white/5 border border-white/10">
+                          <button
+                            onClick={() => setIsLogoHidden(!isLogoHidden)}
+                            className={`w-14 h-7 rounded-full transition-all relative ${
+                              isLogoHidden ? "bg-red-500" : "bg-green-500"
+                            }`}
+                          >
+                            <div
+                              className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-all shadow-lg ${
+                                isLogoHidden ? "right-1" : "left-1"
+                              }`}
+                            />
+                          </button>
+                          <span className="font-bold text-sm">
+                            {isLogoHidden ? "مخفي" : "ظاهر"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-12">
@@ -9502,6 +9713,7 @@ function AppContent() {
         activeTab={authTab}
         setActiveTab={setAuthTab}
       />
+      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   );
 }

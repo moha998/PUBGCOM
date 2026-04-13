@@ -243,5 +243,6 @@ export interface CompetitionSettings {
   endDate: string;
   isActive: boolean;
   isAllEventsHidden?: boolean;
+  isLogoHidden?: boolean;
   updatedAt: any;
 }
