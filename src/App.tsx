@@ -3739,28 +3739,27 @@ function AppContent() {
 
       <main className="max-w-7xl mx-auto px-0 sm:px-6 py-6 sm:py-12 mb-20 lg:mb-0">
       <AnimatePresence mode="wait">
-  {activeTab === "home" ? (
-    <motion.div
-      key="home"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="space-y-16 md:space-y-24 py-6 md:py-12"
-    >
-      {/* 🔥 Hero Section */}
-      <HeroSection />
+ {activeTab === "home" ? (
+  <motion.div
+    key="home"
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="space-y-16 md:space-y-24 py-6 md:py-12"
+  >
+    {/* 🔥 Hero Section */}
+    <HeroSection />
 
-      {/* 👇 باقي المحتوى الحالي (لا تحذفه) */}
-            >
-              {/* Hero Section */}
-              <section className="relative overflow-hidden mx-4 sm:mx-0 rounded-3xl bg-bg-card border border-white/5 p-6 md:p-20 text-white shadow-xl">
-                <div className="relative z-10 max-w-2xl">
-                  <motion.span
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.2 }}
-                    className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4 md:mb-6"
-                  >
+    {/* 👇 باقي المحتوى الحالي */}
+    
+    <section className="relative overflow-hidden mx-4 sm:mx-0 rounded-3xl bg-bg-card border border-white/5 p-6 md:p-20 text-white shadow-xl">
+      <div className="relative z-10 max-w-2xl">
+        <motion.span
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4 md:mb-6"
+        >
                     المنصة رقم #1 للاعبي ببجي
                   </motion.span>
                   <motion.h2
