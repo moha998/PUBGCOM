@@ -94,6 +94,7 @@ export function handleFirestoreError(
     operationType,
     path,
   };
+
   console.error('Firestore Error: ', JSON.stringify(errInfo));
   throw new Error(JSON.stringify(errInfo));
 }
@@ -107,10 +108,11 @@ async function testConnection() {
       error instanceof Error &&
       error.message.includes('the client is offline')
     ) {
-      console.error('Please check your Firebase configuration. ');
+      console.error('Please check your Firebase configuration.');
     }
   }
 }
+
 testConnection();
 
 // تسجيل الدخول عبر Google Popup
@@ -123,12 +125,13 @@ export const loginWithEmail = (email: string, pass: string) =>
 export const registerWithEmail = (email: string, pass: string) =>
   createUserWithEmailAndPassword(auth, email, pass);
 
-// دالة فارغة للتوافق مع الكود القديم — لا تفعل شيئاً لأننا لا نستخدم Redirect
+// دالة فارغة للتوافق مع الكود القديم
 export const handleGoogleRedirectResult = () => Promise.resolve(null);
 
 export const logout = () => signOut(auth);
 
-export const resetPassword = (email: string) => sendPasswordResetEmail(auth, email);
+export const resetPassword = (email: string) =>
+  sendPasswordResetEmail(auth, email);
 
 export {
   collection,
@@ -148,4 +151,5 @@ export {
   serverTimestamp,
   increment,
 };
+
 export type { User };
