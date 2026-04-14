@@ -47,14 +47,20 @@ export default function HeroSection() {
             transition={{ delay: 0.24, duration: 0.45 }}
             className="mt-8 flex flex-wrap gap-4"
           >
-            <button className="btn-gold px-8 py-4 rounded-2xl font-black text-lg shadow-xl shadow-primary/10 hover:scale-[1.03] transition-transform">
-              ابدأ الآن
-            </button>
+            <button
+  onClick={() => (window.location.pathname = "/sensitivity")}
+  className="btn-gold px-8 py-4 rounded-2xl font-black text-lg shadow-xl shadow-primary/10 hover:scale-[1.03] transition-transform"
+>
+  ابدأ الآن
+</button>
 
-            <button className="px-8 py-4 rounded-2xl border border-primary/25 bg-white/[0.03] text-primary font-black text-lg hover:bg-primary/10 transition-all flex items-center gap-3">
-              <Zap size={18} />
-              جرّب المساعد الذكي
-            </button>
+<button
+  onClick={() => (window.location.pathname = "/calculator")}
+  className="px-8 py-4 rounded-2xl border border-primary/25 bg-white/[0.03] text-primary font-black text-lg hover:bg-primary/10 transition-all flex items-center gap-3"
+>
+  <Zap size={18} />
+  جرّب المساعد الذكي
+</button>
           </motion.div>
 
           <motion.div
