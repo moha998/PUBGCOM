@@ -3746,6 +3746,46 @@ function AppContent() {
     exit={{ opacity: 0 }}
     className="space-y-16 md:space-y-24 py-6 md:py-12"
   >
+    
+    {/* 🔥 Hero القديم */}
+    <section className="relative overflow-hidden mx-4 sm:mx-0 rounded-3xl bg-bg-card border border-white/5 p-6 md:p-20 text-white shadow-xl">
+      <div className="relative z-10 max-w-2xl">
+        
+        <motion.span
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="inline-block px-3 py-1 rounded-full bg-primary/20 text-primary text-[10px] md:text-xs font-bold uppercase tracking-wider mb-4 md:mb-6"
+        >
+          المنصة رقم #1 للاعبي ببجي
+        </motion.span>
+
+        <h1 className="text-4xl md:text-6xl font-black leading-tight">
+          احترف اللعبة
+          <br />
+          <span className="text-primary">بأفضل الإعدادات</span>
+        </h1>
+
+        <p className="mt-6 text-slate-300 text-lg leading-8">
+          نقدم لك أدق إعدادات الحساسية المخصصة لجهازك، وآخر أخبار الفعاليات
+          وعروض الشدات الحصرية في مكان واحد.
+        </p>
+
+        <div className="mt-8 flex gap-4">
+          <button className="px-6 py-3 bg-primary text-black font-bold rounded-xl">
+            ابدأ الآن
+          </button>
+
+          <button className="px-6 py-3 border border-primary/40 text-primary rounded-xl">
+            المزيد
+          </button>
+        </div>
+
+      </div>
+    </section>
+
+    {/* 👇 باقي المحتوى لا تحذفه */}
+
 
     {/* 👇 باقي المحتوى الحالي */}
     {/* 
