@@ -13,6 +13,7 @@ import {
   EyeOff,
   Save,
   Loader2,
+  Send,
 } from 'lucide-react';
 import { loginWithGoogle, loginWithEmail, registerWithEmail, resetPassword } from '../firebase';
 
@@ -374,9 +375,15 @@ const AuthModal = React.memo(({
 
                     <button
                       type="button"
-                      onClick={() => setActiveTab('forgot-password')}
-                      className="text-sm text-primary hover:underline font-medium"
+                      onClick={() => {
+                        if (loginName.includes('@')) {
+                          setForgotEmail(loginName);
+                        }
+                        setActiveTab('forgot-password');
+                      }}
+                      className="text-sm text-primary hover:underline font-medium flex items-center gap-1"
                     >
+                      <Mail size={14} />
                       نسيت كلمة المرور؟
                     </button>
                   </div>
@@ -477,14 +484,19 @@ const AuthModal = React.memo(({
                     <p className="text-xs text-slate-400">أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور</p>
                   </div>
                   <div className="relative">
-                    <Mail
-                      size={18}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors z-10"
+                      title="إرسال رابط استعادة كلمة المرور"
+                    >
+                      <Mail size={18} />
+                    </button>
                     <input
                       type="email"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleForgotPassword()}
                       placeholder="البريد الإلكتروني"
                       className="w-full bg-black/20 border border-white/10 rounded-2xl py-3 pr-12 pl-4 text-white placeholder:text-slate-500 outline-none focus:border-primary/50 transition-all"
                     />
@@ -494,9 +506,13 @@ const AuthModal = React.memo(({
                     type="button"
                     onClick={handleForgotPassword}
                     disabled={isLoading}
-                    className="w-full btn-gold py-3.5 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full btn-gold py-3.5 rounded-2xl flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group"
                   >
-                    {isLoading ? <Loader2 className="animate-spin" size={20} /> : <Mail size={20} />}
+                    {isLoading ? (
+                      <Loader2 className="animate-spin" size={20} />
+                    ) : (
+                      <Send className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" size={20} />
+                    )}
                     <span className="font-bold">إرسال الرابط</span>
                   </button>
 
