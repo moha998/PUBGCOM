@@ -1,201 +1,257 @@
-{
-  "entities": {
-    "userProfile": {
-      "title": "User Profile",
-      "description": "Stores user sensitivity settings and profile info",
-      "type": "object",
-      "properties": {
-        "uid": { "type": "string" },
-        "email": { "type": "string" },
-        "displayName": { "type": "string" },
-        "role": { "type": "string", "enum": ["user", "admin"] },
-        "settings": {
-          "type": "object",
-          "properties": {
-            "camera": { "type": "object" },
-            "ads": { "type": "object" },
-            "gyroscope": { "type": "object" }
-          }
-        }
-      },
-      "required": ["uid", "email"]
-    },
-    "event": {
-      "title": "Event",
-      "description": "Upcoming PUBG tournaments and events",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "description": { "type": "string" },
-        "date": { "type": "string" },
-        "status": { "type": "string", "enum": ["upcoming", "ongoing", "ended"] },
-        "isHidden": { "type": "boolean" },
-        "authorEmail": { "type": "string" }
-      },
-      "required": ["title", "date", "status"]
-    },
-    "giveaway": {
-      "title": "Giveaway",
-      "description": "Active giveaways for UC and items",
-      "type": "object",
-      "properties": {
-        "title": { "type": "string" },
-        "image": { "type": "string" },
-        "endDate": { "type": "string" },
-        "participants": { "type": "number" },
-        "status": { "type": "string", "enum": ["active", "ended"] },
-        "authorEmail": { "type": "string" }
-      },
-      "required": ["title", "endDate", "status"]
-    },
-    "ranking": {
-      "title": "Ranking",
-      "description": "Top players ranking",
-      "type": "object",
-      "properties": {
-        "rank": { "type": "number" },
-        "playerName": { "type": "string" },
-        "country": { "type": "string" },
-        "stats": { "type": "string" }
-      },
-      "required": ["rank", "playerName"]
-    },
-    "weaponRating": {
-      "title": "Weapon Rating",
-      "description": "User ratings and comments for weapon loadouts",
-      "type": "object",
-      "properties": {
-        "weaponId": { "type": "string" },
-        "rating": { "type": "number" },
-        "comment": { "type": "string" },
-        "userId": { "type": "string" },
-        "userName": { "type": "string" },
-        "userPhoto": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["weaponId", "rating", "userId"]
-    },
-    "device": {
-      "title": "Device",
-      "description": "Device sensitivity settings",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "brand": { "type": "string" },
-        "code": { "type": "string" },
-        "screenSize": { "type": "string" },
-        "useGyroscope": { "type": "boolean" },
-        "playStyle": { "type": "string", "enum": ["Sniper", "Rusher"] },
-        "settings": { "type": "object" }
-      },
-      "required": ["name", "brand"]
-    },
-    "imageLibrary": {
-      "title": "Image Library",
-      "description": "Stored images for admin use",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "url": { "type": "string" },
-        "name": { "type": "string" },
-        "createdAt": { "type": "string", "format": "date-time" }
-      },
-      "required": ["url", "name"]
-    },
-    "weapon": {
-      "title": "Weapon",
-      "description": "PUBG weapon data",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "nameEn": { "type": "string" },
-        "nameAr": { "type": "string" },
-        "type": { "type": "string" },
-        "damage": { "type": "number" },
-        "recoil": { "type": "number" },
-        "speed": { "type": "number" },
-        "range": { "type": "number" },
-        "image": { "type": "string" },
-        "bestAttachments": { "type": "object" }
-      },
-      "required": ["id", "nameEn", "nameAr", "type"]
-    },
-    "attachment": {
-      "title": "Attachment",
-      "description": "PUBG weapon attachment data",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "arabicName": { "type": "string" },
-        "type": { "type": "string" },
-        "effect": { "type": "string" },
-        "description": { "type": "string" },
-        "image": { "type": "string" }
-      },
-      "required": ["id", "name", "arabicName", "type"]
-    },
-    "character": {
-      "title": "Character",
-      "description": "PUBG character data",
-      "type": "object",
-      "properties": {
-        "id": { "type": "string" },
-        "name": { "type": "string" },
-        "arabicName": { "type": "string" },
-        "ability": { "type": "string" },
-        "description": { "type": "string" },
-        "image": { "type": "string" },
-        "levelMaxBonus": { "type": "string" }
-      },
-      "required": ["id", "name", "arabicName"]
-    }
-  },
-  "firestore": {
-    "/users/{userId}": {
-      "schema": "userProfile",
-      "description": "User profile and settings"
-    },
-    "/events/{eventId}": {
-      "schema": "event",
-      "description": "Public events"
-    },
-    "/giveaways/{giveawayId}": {
-      "schema": "giveaway",
-      "description": "Public giveaways"
-    },
-    "/rankings/{rankingId}": {
-      "schema": "ranking",
-      "description": "Global rankings"
-    },
-    "/weaponRatings/{ratingId}": {
-      "schema": "weaponRating",
-      "description": "Weapon loadout ratings"
-    },
-    "/devices/{deviceId}": {
-      "schema": "device",
-      "description": "Device sensitivity settings"
-    },
-    "/players/{playerId}": {
-      "schema": "device",
-      "description": "Pro player sensitivity settings"
-    },
-    "/imageLibrary/{imageId}": {
-      "schema": "imageLibrary",
-      "description": "Admin image library"
-    },
-    "/weapons/{weaponId}": {
-      "schema": "weapon",
-      "description": "Weapon data"
-    },
-    "/attachments/{attachmentId}": {
-      "schema": "attachment",
-      "description": "Attachment data"
-    },
-    "/characters/{characterId}": {
-      "schema": "character",
-      "description": "Character data"
-    }
-  }
+export interface SensitivitySettings {
+  camera: {
+    noScope: number;
+    redDot: number;
+    scope2x: number;
+    scope3x: number;
+    scope4x: number;
+    scope6x: number;
+    scope8x: number;
+  };
+  ads: {
+    noScope: number;
+    redDot: number;
+    scope2x: number;
+    scope3x: number;
+    scope4x: number;
+    scope6x: number;
+    scope8x: number;
+  };
+  gyroscope: {
+    noScope: number;
+    redDot: number;
+    scope2x: number;
+    scope3x: number;
+    scope4x: number;
+    scope6x: number;
+    scope8x: number;
+  };
+}
+
+export interface Device {
+  id: string;
+  name: string;
+  brand: 'Samsung' | 'Apple' | 'RedMagic' | 'Redmi' | 'Pro Player';
+  settings: SensitivitySettings;
+  code?: string;
+  image?: string;
+  screenSize?: string;
+  useGyroscope?: boolean;
+  playStyle?: 'Sniper' | 'Rusher';
+}
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  date: string;
+  summary: string;
+  url: string;
+  image?: string;
+  category: 'news' | 'uc' | 'event' | 'mode' | 'leaks' | 'updates';
+}
+
+export interface Character {
+  id: string;
+  name: string;
+  arabicName: string;
+  ability: string;
+  description: string;
+  image: string;
+  levelMaxBonus: string;
+}
+
+export interface Giveaway {
+  id: string;
+  title: string;
+  prize: string;
+  endDate: string;
+  participants: number;
+  status: 'active' | 'ended';
+  image: string;
+  createdAt?: any;
+  authorId?: string;
+  authorEmail?: string;
+}
+
+export interface Event {
+  id: string;
+  title: string;
+  description?: string;
+  date: string;
+  status: 'upcoming' | 'ongoing' | 'completed';
+  createdAt: any;
+  authorId: string;
+  authorEmail?: string;
+  type?: string;
+  isHidden?: boolean;
+}
+
+export interface Poll {
+  id: string;
+  question: string;
+  options: {
+    id: string;
+    text: string;
+    votes: number;
+  }[];
+  totalVotes: number;
+  endDate: string;
+}
+
+export interface Ad {
+  id: string;
+  title: string;
+  url: string;
+  icon: string;
+  description?: string;
+  createdAt: any;
+  authorId: string;
+}
+
+export interface Attachment {
+  id: string;
+  name: string;
+  arabicName: string;
+  type: 'muzzle' | 'grip' | 'magazine' | 'stock' | 'scope';
+  effect: string;
+  description: string;
+  image: string;
+}
+
+export interface NewsComment {
+  id: string;
+  newsId: string;
+  userId: string;
+  userName: string;
+  userPhoto?: string;
+  content: string;
+  createdAt: any;
+}
+
+export interface Weapon {
+  id: string;
+  nameEn: string;
+  nameAr: string;
+  type: string;
+  damage: number;
+  recoil: number;
+  speed: number;
+  range: number;
+  ammoType?: string;
+  dps?: number;
+  image: string;
+  bestAttachments?: {
+    muzzle?: string;
+    grip?: string;
+    magazine?: string;
+    stock?: string;
+    scope?: string;
+  };
+}
+
+export interface Ranking {
+  id: string;
+  rank: number;
+  playerName: string;
+  country: string;
+  stats?: string;
+  source?: string;
+  updatedAt: any;
+}
+
+export interface GiveawayEntry {
+  id: string;
+  giveawayId: string;
+  playerName: string;
+  playerId: string;
+  userId: string;
+  createdAt: any;
+}
+
+export interface GiveawayWinner {
+  id: string;
+  giveawayId: string;
+  playerName: string;
+  playerId: string;
+  userId: string;
+  prize: string;
+  wonAt: string;
+  date: string;
+  createdAt: any;
+}
+
+export interface Clip {
+  id: string;
+  title: string;
+  description?: string;
+  url: string;
+  videoUrl: string;
+  authorId: string;
+  authorName: string;
+  authorPhoto?: string;
+  userName: string;
+  userPhoto?: string;
+  votes: number;
+  voters: string[];
+  isWinner?: boolean;
+  aiAnalysis?: {
+    analysis: string;
+    tips: string[];
+    pros: string[];
+    cons: string[];
+    strengths: string[];
+    weaknesses: string[];
+  };
+  createdAt: any;
+}
+
+export interface SensitivityRating {
+  id: string;
+  deviceId: string;
+  rating: number;
+  comment?: string;
+  userId: string;
+  userName: string;
+  userPhoto?: string;
+  createdAt: any;
+}
+
+export interface WeaponRating {
+  id: string;
+  weaponId: string;
+  rating: number;
+  comment?: string;
+  userId: string;
+  userName: string;
+  userPhoto?: string;
+  createdAt: any;
+}
+
+export interface UserProfile {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL?: string;
+  role: 'admin' | 'user';
+  settings: SensitivitySettings;
+  status?: 'active' | 'disabled' | 'suspended';
+  isBanned?: boolean;
+}
+
+export interface CompetitionSettings {
+  id: string; // 'royal-pass' | 'best-clip' | 'daily-tournament' | 'global'
+  type: 'giveaway' | 'clips' | 'tournament' | 'global';
+  startDate: string; // ISO string or datetime-local format
+  endDate: string;
+  isActive: boolean;
+  isAllEventsHidden?: boolean;
+  isTournamentsHidden?: boolean;
+  isLogoHidden?: boolean;
+  updatedAt: any;
+}
+
+export interface SiteStats {
+  visitors: number;
+  totalParticipations: number;
+  updatedAt: any;
 }
