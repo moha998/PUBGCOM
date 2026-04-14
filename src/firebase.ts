@@ -113,7 +113,8 @@ async function testConnection() {
 }
 testConnection();
 
-// تسجيل الدخول عبر Popup فقط — لا يحتاج إضافة الدومين في Firebase Authorized Domains
+// تسجيل الدخول عبر Google Popup
+// يجب إضافة دومين الموقع داخل Firebase Authentication > Authorized domains
 export const loginWithGoogle = () => signInWithPopup(auth, googleProvider);
 
 export const loginWithEmail = (email: string, pass: string) =>
