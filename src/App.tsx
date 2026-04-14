@@ -115,7 +115,6 @@ import { Helmet, HelmetProvider } from "react-helmet-async";
 import Chatbot from "./components/Chatbot";
 import AuthModal from "./components/AuthModal";
 import OptimizedImage from "./components/OptimizedImage";
-import HeroSection from "./components/home/HeroSection";
 import {
   Weapon,
   Device,
