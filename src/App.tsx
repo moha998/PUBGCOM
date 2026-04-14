@@ -3746,11 +3746,6 @@ function AppContent() {
     exit={{ opacity: 0 }}
     className="space-y-16 md:space-y-24 py-6 md:py-12"
   >
-    <HeroSection />
-
-    {/* احذف أو علّق الهيرو القديم الذي يبدأ بـ section relative overflow-hidden */}
-    {/* 🔥 Hero Section */}
-    <HeroSection />
 
     {/* 👇 باقي المحتوى الحالي */}
     {/* 
