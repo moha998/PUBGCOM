@@ -3799,7 +3799,6 @@ function AppContent() {
                       ابدأ الآن
                     </button>
                   </motion.div>
-                </div>
 
                 <SubtleAdBanner />
 
