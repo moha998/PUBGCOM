@@ -3747,13 +3747,19 @@ function AppContent() {
     exit={{ opacity: 0 }}
     className="space-y-16 md:space-y-24 py-6 md:py-12"
   >
+    <HeroSection />
+
+    {/* احذف أو علّق الهيرو القديم الذي يبدأ بـ section relative overflow-hidden */}
     {/* 🔥 Hero Section */}
     <HeroSection />
 
     {/* 👇 باقي المحتوى الحالي */}
-    
-    <section className="relative overflow-hidden mx-4 sm:mx-0 rounded-3xl bg-bg-card border border-white/5 p-6 md:p-20 text-white shadow-xl">
-      <div className="relative z-10 max-w-2xl">
+    {/* 
+<section className="relative overflow-hidden mx-4 sm:mx-0 rounded-3xl bg-bg-card border border-white/5 p-6 md:p-20 text-white shadow-xl">
+  ...
+</section>
+*/}
+   
         <motion.span
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
