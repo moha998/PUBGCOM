@@ -846,7 +846,8 @@ function AppContent() {
   >(null);
 
   const [isAiLoading, setIsAiLoading] = useState(false);
-  const [showAdminLogin, setShowAdminLogin] = useState(false); import AdminOverview from "./components/admin/AdminOverview";
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  import AdminOverview from "./components/admin/AdminOverview";
   const [showAddGiveawayModal, setShowAddGiveawayModal] = useState(false);
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [showAddTemplateModal, setShowAddTemplateModal] = useState(false);
