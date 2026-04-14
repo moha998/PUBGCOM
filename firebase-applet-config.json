@@ -1,10 +1,9 @@
-{
-  "projectId": "pubgcom",
-  "appId": "1:819347633108:web:2a971b3eb6a15da8999c41",
-  "apiKey": "AIzaSyCRhYQ6ScNMO9GixZwW_Z5p_JtsK6CNxQw",
-  "authDomain": "pubgco.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-0f30f733-4e31-48f0-9a50-fcc09df8c9da",
-  "storageBucket": "pubgco.firebasestorage.app",
-  "messagingSenderId": "819347633108",
-  "measurementId": ""
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyDonWe3yVelC6Hgv_NvlASzjOZwe8fBWhE",
+  authDomain: "pubgcomverel.firebaseapp.com",
+  projectId: "pubgcomverel",
+  storageBucket: "pubgcomverel.firebasestorage.app",
+  messagingSenderId: "228937802114",
+  appId: "1:228937802114:web:0c44c06a3dee1ac6a32f9b",
+  measurementId: "G-FM72XP3QEE"
+};
