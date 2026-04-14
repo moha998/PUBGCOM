@@ -3809,7 +3809,6 @@ function AppContent() {
                     className="absolute -top-20 -right-20 rotate-12 text-primary"
                   />
                 </div>
-              </section>
 
               {/* Tournament Flash Banner */}
               <TournamentFlashBanner settings={competitionSettings} />
