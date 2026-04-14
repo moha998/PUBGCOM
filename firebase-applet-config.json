@@ -1,4 +1,4 @@
-const firebaseConfig = {
+ {
   apiKey: "AIzaSyDonWe3yVelC6Hgv_NvlASzjOZwe8fBWhE",
   authDomain: "pubgcomverel.firebaseapp.com",
   projectId: "pubgcomverel",
