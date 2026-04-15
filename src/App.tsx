@@ -5,6 +5,7 @@ import React, {
   ErrorInfo,
   ReactNode,
   useRef,
+  useMemo,
 } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
