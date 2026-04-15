@@ -848,6 +848,7 @@ function AppContent() {
 
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showAddGiveawayModal, setShowAddGiveawayModal] = useState(false);
   const [showAddEventModal, setShowAddEventModal] = useState(false);
   const [showAddTemplateModal, setShowAddTemplateModal] = useState(false);
