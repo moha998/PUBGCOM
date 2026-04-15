@@ -10022,6 +10022,14 @@ function AppContent() {
         setActiveTab={setAuthTab}
       />
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+{isAdmin && (
+        <button 
+          onClick={() => setShowAdminDashboard(!showAdminDashboard)}
+          className="fixed bottom-24 left-6 z-[60] bg-primary text-black p-3 rounded-full shadow-lg hover:scale-110 transition-transform flex items-center justify-center"
+          title={showAdminDashboard ? "العودة للموقع" : "فتح لوحة التحكم"}
+        >
+          {showAdminDashboard ? <Home size={24} /> : <Settings size={24} />}
+        </button>
     </div>
   );
 }
