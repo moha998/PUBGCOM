@@ -862,14 +862,6 @@ function AppContent() {
     selectedWeapon2,
     distance
     );
-    {isAdmin && (
-  <button 
-    onClick={() => setShowAdminDashboard(!showAdminDashboard)}
-    className="fixed bottom-24 left-6 z-50 bg-primary text-black p-3 rounded-full shadow-lg hover:scale-110 transition-transform"
-    title={showAdminDashboard ? "العودة للموقع" : "فتح لوحة التحكم"}
-  >
-    {showAdminDashboard ? <Home size={24} /> : <Settings size={24} />}
-  </button>
 )}
   );
   const [newWeapon, setNewWeapon] = useState<Partial<Weapon>>({
