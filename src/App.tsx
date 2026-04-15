@@ -857,13 +857,11 @@ function AppContent() {
   const [selectedWeapon2, setSelectedWeapon2] = useState<Weapon | null>(null);
   const [distance, setDistance] = useState<number>(50);
 
-  const comparisonAdvice = buildComparisonAdvice(
-    selectedWeapon1,
-    selectedWeapon2,
-    distance
-    );
-)}
-  );
+const comparisonAdvice = buildComparisonAdvice(
+  selectedWeapon1,
+  selectedWeapon2,
+  distance
+);
   const [newWeapon, setNewWeapon] = useState<Partial<Weapon>>({
     nameEn: "",
     nameAr: "",
