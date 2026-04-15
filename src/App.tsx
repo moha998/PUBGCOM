@@ -861,6 +861,7 @@ function AppContent() {
     selectedWeapon1,
     selectedWeapon2,
     distance
+    );
     {isAdmin && (
   <button 
     onClick={() => setShowAdminDashboard(!showAdminDashboard)}
