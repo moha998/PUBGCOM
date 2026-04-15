@@ -10025,6 +10025,7 @@ const comparisonAdvice = useMemo(
         >
           {showAdminDashboard ? <Home size={24} /> : <Settings size={24} />}
         </button>
+      )}
     </div>
   );
 }
