@@ -19,6 +19,53 @@ function AnimatedNumber({ value }: { value: number }) {
 
   return <motion.span>{rounded}</motion.span>;
 }
+
+function CircularScore({ value, label, icon: Icon, isGolden }: { value: number, label: string, icon: any, isGolden?: boolean }) {
+  return (
+    <div className={`p-6 bg-black/40 border ${isGolden ? 'border-yellow-500/50 shadow-[0_0_30px_rgba(234,179,8,0.2)]' : 'border-white/10'} rounded-2xl flex flex-col items-center justify-center text-center relative overflow-hidden group`}>
+      {isGolden && <div className="absolute inset-0 bg-yellow-500/5 group-hover:bg-yellow-500/10 transition-colors" />}
+      <div className="relative w-28 h-28 mb-4">
+        {/* Background Circle */}
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+          <circle
+            cx="50"
+            cy="50"
+            r="40"
+            stroke="currentColor"
+            strokeWidth="8"
+            fill="transparent"
+            className="text-white/5"
+          />
+          {/* Animated Progress Circle */}
+          <motion.circle
+            cx="50"
+            cy="50"
+            r="40"
+            stroke="currentColor"
+            strokeWidth="8"
+            fill="transparent"
+            strokeLinecap="round"
+            className={isGolden ? "text-yellow-400" : "text-primary"}
+            initial={{ strokeDasharray: "0 251.2" }}
+            whileInView={{ strokeDasharray: `${(value / 100) * 251.2} 251.2` }}
+            transition={{ duration: 2, ease: "easeOut" }}
+            viewport={{ once: true }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className={`text-2xl font-black ${isGolden ? "text-yellow-400" : "text-white"}`}>
+            <AnimatedNumber value={value} />%
+          </span>
+        </div>
+      </div>
+      <div className={`flex items-center gap-2 ${isGolden ? "text-yellow-500" : "text-slate-400"}`}>
+        <Icon size={16} />
+        <span className="text-sm font-bold">{label}</span>
+      </div>
+    </div>
+  );
+}
+
 import {
   Smartphone,
   Tablet,
@@ -673,12 +720,12 @@ const OfficialGlobalTournaments = ({ isHidden }: { isHidden: boolean }) => {
         </div>
       </div>
 
-      <div className="flex md:grid md:grid-cols-3 gap-6 overflow-x-auto pb-6 px-4 md:px-0 snap-x no-scrollbar">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 px-4 md:px-0">
         {tournaments.map((t) => (
           <motion.div
             key={t.id}
             whileHover={{ y: -8, scale: 1.02 }}
-            className="relative min-w-[280px] md:min-w-0 snap-center overflow-hidden rounded-3xl bg-bg-card border border-white/10 p-6 group shadow-xl hover:shadow-primary/5 transition-all duration-500"
+            className="relative overflow-hidden rounded-3xl bg-bg-card border border-white/10 p-6 group shadow-xl hover:shadow-primary/5 transition-all duration-500"
           >
             {/* Flash Effect */}
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out" />
@@ -3239,15 +3286,26 @@ function AppContent() {
   return (
     <div
       className={`min-h-screen text-text-main font-sans selection:bg-primary/30 relative transition-all duration-1000 ${
-        hasSRating ? "bg-yellow-900/20 shadow-[inset_0_0_200px_rgba(234,179,8,0.2)]" : "bg-bg-dark"
+        hasSRating ? "bg-[#1a1300] shadow-[inset_0_0_300px_rgba(234,179,8,0.15)]" : "bg-bg-dark"
       }`}
       dir="rtl"
     >
       {/* Premium Decorative Elements */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
-        {hasSRating && (
-          <div className="absolute inset-0 bg-yellow-500/5 animate-pulse-gold mix-blend-screen" />
-        )}
+        <AnimatePresence>
+          {hasSRating && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1 }}
+              className="absolute inset-0 z-[-1]"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(234,179,8,0.2),transparent_70%)] animate-pulse-gold" />
+              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-50" />
+            </motion.div>
+          )}
+        </AnimatePresence>
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full animate-pulse-gold" />
         <div
           className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 blur-[120px] rounded-full animate-pulse-gold"
@@ -4223,7 +4281,7 @@ function AppContent() {
                     </div>
                   </div>
 
-                  <div className="flex md:grid md:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto pb-6 px-4 md:px-0 snap-x no-scrollbar">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6 px-4 md:px-0">
                     {ads.map((ad, i) => (
                       <motion.a
                         key={ad.id}
@@ -4234,7 +4292,7 @@ function AppContent() {
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
                         transition={{ delay: i * 0.1 }}
-                        className="min-w-[280px] md:min-w-0 snap-center group relative overflow-hidden rounded-3xl bg-bg-card border border-white/5 p-8 hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5"
+                        className="group relative md:overflow-hidden rounded-3xl bg-bg-card border border-white/5 p-8 hover:border-primary/30 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/5"
                       >
                         <div className="relative z-10">
                           <div className="flex items-start justify-between mb-6">
@@ -5079,7 +5137,7 @@ function AppContent() {
                     </div>
 
                     {/* Comments List */}
-                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="space-y-4 md:max-h-[400px] md:overflow-y-auto pr-2 custom-scrollbar">
                       {sensitivityRatings.filter(
                         (r) => r.deviceId === selectedDevice.id
                       ).length > 0 ? (
@@ -5277,7 +5335,7 @@ function AppContent() {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-20 overflow-hidden py-2 max-h-[300px] overflow-y-auto custom-scrollbar"
+                            className="md:absolute relative mt-2 md:top-full left-0 right-0 bg-slate-900 border border-white/10 rounded-xl shadow-2xl md:z-20 md:overflow-hidden py-2 md:max-h-[300px] md:overflow-y-auto custom-scrollbar"
                           >
                             {currentCharacters.map((char) => (
                               <button
@@ -5398,7 +5456,7 @@ function AppContent() {
                             initial={{ opacity: 0, y: 10, scale: 0.95 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                            className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl z-20 overflow-hidden py-2 max-h-[400px] overflow-y-auto custom-scrollbar"
+                            className="md:absolute relative mt-2 md:top-full left-0 right-0 bg-slate-900 border border-white/10 rounded-xl shadow-2xl md:z-20 md:overflow-hidden py-2 md:max-h-[400px] md:overflow-y-auto custom-scrollbar"
                           >
                             {Object.entries(groupedAttachments).map(
                               ([type, items]) => (
@@ -6674,25 +6732,23 @@ function AppContent() {
                                   </div>
 
                                   {/* X-Ray Stats */}
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                    <div className="p-4 bg-black/40 border border-yellow-500/20 rounded-xl flex flex-col items-center justify-center text-center">
-                                      <Target className="text-yellow-500 mb-2" size={24} />
-                                      <span className="text-xs text-slate-400 mb-1">ثبات الارتداد</span>
-                                      <span className="text-3xl font-black text-yellow-400">
-                                        <AnimatedNumber value={clip.aiAnalysis.xray_results.recoil_stability_score} />%
-                                      </span>
-                                    </div>
-                                    <div className="p-4 bg-black/40 border border-yellow-500/20 rounded-xl flex flex-col items-center justify-center text-center">
-                                      <Crosshair className="text-yellow-500 mb-2" size={24} />
-                                      <span className="text-xs text-slate-400 mb-1">دقة الهيدشوت</span>
-                                      <span className="text-3xl font-black text-yellow-400">
-                                        <AnimatedNumber value={clip.aiAnalysis.xray_results.headshot_accuracy_percent} />%
-                                      </span>
-                                    </div>
-                                    <div className="p-4 bg-black/40 border border-yellow-500/20 rounded-xl flex flex-col items-center justify-center text-center">
-                                      <Zap className="text-yellow-500 mb-2" size={24} />
-                                      <span className="text-xs text-slate-400 mb-1">سرعة الحركة</span>
-                                      <span className="text-xl font-black text-yellow-400 mt-2">{clip.aiAnalysis.xray_results.movement_speed}</span>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <CircularScore 
+                                      value={clip.aiAnalysis.xray_results.recoil_stability_score} 
+                                      label="ثبات الارتداد" 
+                                      icon={Target} 
+                                      isGolden={true} 
+                                    />
+                                    <CircularScore 
+                                      value={clip.aiAnalysis.xray_results.headshot_accuracy_percent} 
+                                      label="دقة الهيدشوت" 
+                                      icon={Crosshair} 
+                                      isGolden={true} 
+                                    />
+                                    <div className="p-6 bg-black/40 border border-yellow-500/20 rounded-2xl flex flex-col items-center justify-center text-center">
+                                      <Zap className="text-yellow-500 mb-4" size={32} />
+                                      <span className="text-sm font-bold text-slate-400 mb-2">سرعة الحركة</span>
+                                      <span className="text-3xl font-black text-yellow-400 mt-2">{clip.aiAnalysis.xray_results.movement_speed}</span>
                                     </div>
                                   </div>
 
@@ -6733,17 +6789,16 @@ function AppContent() {
                               ) : clip.aiAnalysis?.analysis ? (
                                 <div className="space-y-6" dir="rtl">
                                   {/* Analysis Stats */}
-                                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                                     <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center text-center">
                                       <span className="text-xs text-slate-400 mb-1">تقييم المحترفين</span>
-                                      <span className="text-2xl font-black text-primary">{clip.aiAnalysis.analysis?.pro_rating || '-'}</span>
+                                      <span className="text-4xl font-black text-primary drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]">{clip.aiAnalysis.analysis?.pro_rating || '-'}</span>
                                     </div>
-                                    <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center text-center">
-                                      <span className="text-xs text-slate-400 mb-1">ثبات الارتداد</span>
-                                      <span className="text-2xl font-black text-sky-400">
-                                        <AnimatedNumber value={clip.aiAnalysis.analysis?.recoil_control || 0} />%
-                                      </span>
-                                    </div>
+                                    <CircularScore 
+                                      value={clip.aiAnalysis.analysis?.recoil_control || 0} 
+                                      label="ثبات الارتداد" 
+                                      icon={Target} 
+                                    />
                                     <div className="p-4 bg-white/5 border border-white/10 rounded-2xl flex flex-col items-center justify-center text-center">
                                       <span className="text-xs text-slate-400 mb-1">سرعة رد الفعل</span>
                                       <span className="text-2xl font-black text-orange-400">
@@ -8276,7 +8331,7 @@ function AppContent() {
                                     )}
 
                                     {/* Comments List */}
-                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                    <div className="space-y-4 md:max-h-[400px] md:overflow-y-auto pr-2 custom-scrollbar">
                                       {comments.length > 0 ? (
                                         comments.map((comment) => (
                                           <div
