@@ -754,49 +754,6 @@ const OfficialGlobalTournaments = ({ isHidden }: { isHidden: boolean }) => {
   );
 };
 
-const BottomNav = ({ activeTab, setActiveTab }: { activeTab: string, setActiveTab: (tab: any) => void }) => {
-  const navItems = [
-    { id: 'home', label: 'الرئيسية', icon: <Home size={20} /> },
-    { id: 'sensitivity', label: 'الحساسية', icon: <Target size={20} /> },
-    { id: 'news', label: 'الأخبار', icon: <Newspaper size={20} /> },
-    { id: 'tools', label: 'الأدوات', icon: <Wrench size={20} /> },
-  ];
-
-  return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[100] bg-bg-dark/80 backdrop-blur-xl border-t border-white/10 px-4 py-2 pb-safe">
-      <div className="flex justify-around items-center">
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => {
-              if (item.id === 'tools') {
-                // If tools, maybe we can toggle a tools menu or just go to calculator
-                setActiveTab('calculator');
-              } else {
-                setActiveTab(item.id as any);
-              }
-            }}
-            className={`flex flex-col items-center gap-1 p-2 transition-all ${
-              (activeTab === item.id || (item.id === 'tools' && ['calculator', 'compare', 'loadouts', 'rate'].includes(activeTab)))
-                ? 'text-primary' 
-                : 'text-slate-400'
-            }`}
-          >
-            <div className={`p-1.5 rounded-xl transition-all ${
-              (activeTab === item.id || (item.id === 'tools' && ['calculator', 'compare', 'loadouts', 'rate'].includes(activeTab)))
-                ? 'bg-primary/10' 
-                : ''
-            }`}>
-              {item.icon}
-            </div>
-            <span className="text-[10px] font-bold">{item.label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const LoadingSpinner = () => (
   <div className="fixed inset-0 bg-bg-dark z-[200] flex flex-col items-center justify-center">
     <div className="relative">
@@ -3848,208 +3805,70 @@ function AppContent() {
             )}
           </nav>
 
-          {/* Mobile Menu Button */}
-          <div className="flex lg:hidden items-center gap-3">
+          {/* Mobile Actions Overlay/Bar */}
+          <div className="flex lg:hidden items-center gap-2">
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2.5 rounded-xl bg-white/5 text-text-muted hover:text-primary border border-white/10"
+              className="p-2.5 rounded-xl bg-white/5 text-slate-400 hover:text-primary hover:bg-white/10 transition-all border border-white/10"
+              title={isDarkMode ? "الوضع الفاتح" : "الوضع المظلم"}
             >
               {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2.5 rounded-xl bg-primary text-black shadow-lg shadow-primary/20"
-            >
-              {isMobileMenuOpen ? (
-                <Plus className="rotate-45" size={24} />
-              ) : (
-                <MenuIcon size={24} />
-              )}
-            </button>
+            {activeUser ? (
+              <button
+                onClick={() => setActiveTab("dashboard")}
+                className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-yellow-600 flex items-center justify-center text-black border border-primary/20 shadow-lg shadow-primary/20"
+                title="لوحة التحكم"
+              >
+                <UserIcon size={18} />
+              </button>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="w-10 h-10 rounded-xl bg-primary text-black hover:scale-[1.05] transition-all border border-primary/20 shadow-lg shadow-primary/20 flex items-center justify-center font-bold"
+                title="تسجيل الدخول / إنشاء حساب"
+              >
+                <UserIcon size={18} />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, x: "100%" }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed inset-0 z-[60] bg-bg-dark lg:hidden overflow-y-auto"
-            >
-              <div className="p-6 pb-24 space-y-6 relative min-h-full">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-[0.02] pointer-events-none overflow-hidden">
-                  <Zap size={400} className="absolute -top-20 -right-20 rotate-12 text-primary" />
-                </div>
-
-                {/* Header */}
-                <div className="flex justify-between items-center relative z-10 pb-2 border-b border-white/5">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
-                      <Zap size={20} className="text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-xl font-black gold-shimmer leading-none">ببجيكوم</h2>
-                      <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">القائمة الرئيسية</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="p-2.5 rounded-xl bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <Plus className="rotate-45" size={24} />
-                  </button>
-                </div>
-
-                {/* Main Navigation */}
-                <div className="space-y-2 relative z-10">
-                  {[
-                    { id: "home", label: "الرئيسية", icon: <Home size={20} /> },
-                    { id: "news", label: "الأخبار والتسريبات", icon: <Newspaper size={20} /> },
-                    { id: "game-events", label: "فعاليات اللعبة", icon: <Calendar size={20} /> },
-                    { id: "characters", label: "مميزات وخصائص", icon: <Smartphone size={20} /> },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => {
-                        setActiveTab(tab.id as any);
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className={`w-full p-4 rounded-xl flex items-center gap-4 font-bold transition-all ${
-                        activeTab === tab.id
-                          ? "bg-primary text-black shadow-lg shadow-primary/20"
-                          : "bg-white/5 text-slate-300 border border-transparent hover:border-white/10"
-                      }`}
-                    >
-                      <div className={activeTab === tab.id ? "text-black" : "text-slate-400"}>{tab.icon}</div>
-                      <span className="flex-1 text-right">{tab.label}</span>
-                      {activeTab === tab.id && <ChevronRight size={16} className="opacity-50" />}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Player Tools */}
-                <div className="space-y-3 relative z-10 pt-4 border-t border-white/5">
-                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">أدوات الاحتراف</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {[
-                      { id: "calculator", label: "حاسبة التقييم", icon: <BarChart3 size={20} /> },
-                      { id: "compare", label: "مقارنة الأسلحة", icon: <ArrowLeftRight size={20} /> },
-                      { id: "loadouts", label: "تجهيز الأسلحة", icon: <Settings size={20} /> },
-                      { id: "sensitivity", label: "الحساسية", icon: <Target size={20} /> },
-                      { id: "rate", label: "تحليل اللقطات", icon: <Video size={20} />, highlight: true },
-                    ].map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setActiveTab(item.id as any);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`p-4 rounded-xl flex flex-col items-center justify-center gap-3 font-bold text-xs transition-all ${
-                          activeTab === item.id
-                            ? "bg-primary text-black shadow-lg shadow-primary/20"
-                            : item.highlight
-                            ? "bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20"
-                            : "bg-white/5 border border-transparent text-slate-300 hover:border-white/10"
-                        }`}
-                      >
-                        <div className={activeTab === item.id ? "text-black" : item.highlight ? "text-primary" : "text-slate-400"}>
-                          {item.icon}
-                        </div>
-                        <span className="text-center">{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Community */}
-                <div className="space-y-3 relative z-10 pt-4 border-t border-white/5">
-                  <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-widest px-2">مجتمعنا</h3>
-                  <div className="grid grid-cols-3 gap-2">
-                    {[
-                      { id: "events", label: "الفعاليات", icon: <Calendar size={18} /> },
-                      { id: "giveaways", label: "السحوبات", icon: <Gift size={18} /> },
-                      { id: "ads", label: "الإعلانات", icon: <Megaphone size={18} /> },
-                    ].map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => {
-                          setActiveTab(item.id as any);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`p-3 rounded-xl flex flex-col items-center justify-center gap-2 font-bold text-[10px] transition-all ${
-                          activeTab === item.id
-                            ? "bg-white/20 border border-white/30 text-white shadow-lg"
-                            : "bg-white/5 border border-transparent text-slate-400 hover:border-white/10"
-                        }`}
-                      >
-                        <div className={activeTab === item.id ? "text-white" : "text-slate-400"}>
-                          {item.icon}
-                        </div>
-                        <span className="text-center">{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Dashboard & Profile */}
-                <div className="space-y-3 relative z-10 pt-6 mt-4 border-t border-white/5 pb-10">
-                  {activeUser ? (
-                    <>
-                      <button
-                        onClick={() => {
-                          setActiveTab("dashboard");
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`w-full p-4 rounded-xl flex items-center gap-4 font-bold transition-all ${
-                          activeTab === "dashboard"
-                            ? "bg-primary text-black shadow-lg shadow-primary/20"
-                            : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
-                        }`}
-                      >
-                        <div className={activeTab === "dashboard" ? "text-black" : "text-primary"}>
-                          {isAdmin ? <Shield size={24} /> : <LayoutDashboard size={24} />}
-                        </div>
-                        <div className="flex-1 text-right">
-                          <span className="block text-sm">{isAdmin ? "لوحة تحكم المسؤول" : "لوحة التحكم"}</span>
-                          <span className={`text-[10px] font-medium block mt-0.5 ${activeTab === "dashboard" ? "text-black/70" : "text-slate-400"}`}>
-                            {activeUser.displayName || "لاعب ببجي"}
-                          </span>
-                        </div>
-                        <ChevronRight size={16} className={activeTab === "dashboard" ? "text-black/50" : "text-slate-500"} />
-                      </button>
-
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className="w-full p-4 rounded-xl bg-red-500/10 text-red-500 font-bold flex items-center justify-center gap-3 border border-red-500/20 hover:bg-red-500/20 transition-all"
-                      >
-                        <LogOut size={18} />
-                        <span>تسجيل الخروج</span>
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        handleLogin();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="w-full p-4 rounded-xl bg-primary text-black font-black flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
-                    >
-                      <UserIcon size={20} />
-                      <span>تسجيل الدخول / حساب جديد</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Mobile Horizontal Section Tabs Menu */}
+        <div className="lg:hidden mt-4 pt-4 border-t border-white/5 mx-[-1rem] px-4 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-2 min-w-max pb-2">
+            {[
+              { id: "home", label: "الرئيسية", icon: <Home size={14} /> },
+              { id: "news", label: "التسريبات", icon: <Newspaper size={14} /> },
+              { id: "rate", label: "تحليل الذكاء", icon: <Video size={14} />, highlight: true },
+              { id: "calculator", label: "حاسبة التقييم", icon: <BarChart3 size={14} /> },
+              { id: "compare", label: "مقارنة", icon: <ArrowLeftRight size={14} /> },
+              { id: "loadouts", label: "القطع", icon: <Settings size={14} /> },
+              { id: "sensitivity", label: "الحساسية", icon: <Target size={14} /> },
+              { id: "game-events", label: "الفعاليات", icon: <Calendar size={14} /> },
+              { id: "events", label: "البطولات", icon: <Trophy size={14} /> },
+              { id: "giveaways", label: "السحوبات", icon: <Gift size={14} /> },
+              { id: "ads", label: "مجتمعنا", icon: <Megaphone size={14} /> },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`whitespace-nowrap px-4 py-2 rounded-full font-bold text-[12px] flex items-center gap-2 transition-all ${
+                  activeTab === tab.id
+                    ? "bg-primary text-black shadow-lg shadow-primary/20 scale-105"
+                    : tab.highlight
+                    ? "bg-primary/10 text-primary border border-primary/30"
+                    : "bg-white/5 text-slate-300 border border-transparent hover:border-white/10"
+                }`}
+              >
+                <span className={activeTab === tab.id ? "text-black" : tab.highlight ? "text-primary" : "text-slate-400"}>
+                  {tab.icon}
+                </span>
+                <span>{tab.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-0 sm:px-6 py-6 sm:py-12 mb-20 lg:mb-0">
@@ -9919,7 +9738,6 @@ function AppContent() {
         activeTab={authTab}
         setActiveTab={setAuthTab}
       />
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   );
 }
